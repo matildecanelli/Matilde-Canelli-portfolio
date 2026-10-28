@@ -111,12 +111,32 @@ function avvia() {
   /* ---------- 2. Il vetro: lo shader delle bolle ---------- */
   const giri = stretto() ? 8 : 16;   // quante letture per pixel: meno sul telefono, che è più lento
   const vertice = `
+    uniform float uTempo; uniform float uSeme; uniform float uIrregolare;
     varying vec3 vNormal; varying vec3 vEye;
+
+    // la superficie della bolla: una sfera spinta in fuori e in dentro da onde lente
+    vec3 deforma(vec3 p){
+      float t = uTempo * 0.5;
+      float onda = sin(p.x * 2.1 + t + uSeme) * sin(p.y * 1.8 + t * 1.3 + uSeme * 2.0) * 0.6
+                 + sin(p.z * 2.6 + p.x * 1.2 - t * 0.8 + uSeme * 3.0) * 0.4;
+      return p * (1.0 + onda * uIrregolare);
+    }
+
     void main(){
-      vec4 mondo = modelMatrix * vec4(position, 1.0);
+      vec3 p = deforma(position);
+      // la nuova normale: guardiamo due punti vicini sulla superficie deformata
+      vec3 n0 = normalize(normal);
+      vec3 t1 = normalize(cross(n0, abs(n0.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0)));
+      vec3 t2 = cross(n0, t1);
+      vec3 pa = deforma(normalize(position + t1 * 0.01));
+      vec3 pb = deforma(normalize(position + t2 * 0.01));
+      vec3 n = normalize(cross(pa - p, pb - p));
+      if (dot(n, n0) < 0.0) n = -n;
+
+      vec4 mondo = modelMatrix * vec4(p, 1.0);
       vec4 vista = viewMatrix * mondo;
       gl_Position = projectionMatrix * vista;
-      vNormal = normalize(normalMatrix * normal);
+      vNormal = normalize(normalMatrix * n);
       vEye = normalize(vista.xyz);
     }`;
   const frammento = `
@@ -169,7 +189,7 @@ function avvia() {
       colore = saturazione(colore, uSaturation);
 
       float lampi = luce(uLight, uShininess, uDiffuseness, n, occhio)
-                  + 0.6 * luce(vec3(1.0, 1.0, -1.0), uShininess * 0.6, uDiffuseness * 0.5, n, occhio);
+                  + 0.25 * luce(vec3(1.0, 1.0, -1.0), uShininess * 0.6, uDiffuseness * 0.5, n, occhio);
       colore += lampi * (uBackside > 0.5 ? 0.35 : 1.0);
 
       // i riflessi nei colori del progetto: il vetro riflette una "stanza" dipinta
@@ -177,7 +197,7 @@ function avvia() {
       vec3 riflesso = reflect(occhio, n);
       vec3 stanza = mix(uColore2, uColore1, smoothstep(-0.6, 0.8, riflesso.y + riflesso.x * 0.3));
       float versoBordo = pow(1.0 - abs(dot(occhio, n)), 1.6);
-      colore += stanza * (0.06 + versoBordo * 0.6) * uForzaColori * (uBackside > 0.5 ? 0.4 : 1.0);
+      colore += stanza * (0.0 + versoBordo * 0.55) * uForzaColori * (uBackside > 0.5 ? 0.4 : 1.0);
       // due lampi colorati, uno per colore del progetto
       colore += uColore1 * luce(vec3(1.0, -0.7, 1.0), uShininess * 0.4, 0.0, n, occhio) * 0.8 * uForzaColori;
       colore += uColore2 * luce(vec3(-0.9, -1.0, 0.6), uShininess * 0.3, 0.0, n, occhio) * 0.6 * uForzaColori;
@@ -189,14 +209,14 @@ function avvia() {
       // la stella di Matilde riflessa sulla superficie (solo sul lato davanti)
       if (uBackside < 0.5) {
         vec3 rifl = reflect(occhio, n);
-        vec2 suv = (rifl.xy - uSpostaStella) * 0.62 + 0.5;
+        vec2 suv = (rifl.xy - uSpostaStella) * 0.5 + 0.5;
         suv.y = 1.0 - suv.y;
         if (suv.x > 0.0 && suv.x < 1.0 && suv.y > 0.0 && suv.y < 1.0) {
           float stella = texture2D(uStella, suv).a;
           // sfuma la stella verso i bordi dell'immagine e verso il profilo della sfera,
           // dove la riflessione si schiaccia: niente ovali puntinati
           float lontanoDalBordo = min(min(suv.x, suv.y), min(1.0 - suv.x, 1.0 - suv.y));
-          stella *= smoothstep(0.0, 0.1, lontanoDalBordo) * smoothstep(0.2, 0.55, abs(dot(occhio, n)));
+          stella *= smoothstep(0.0, 0.06, lontanoDalBordo) * smoothstep(0.05, 0.3, abs(dot(occhio, n)));
           colore += stella * uForzaStella * mix(vec3(1.0), uColore1, 0.25);
         }
       }
@@ -208,20 +228,22 @@ function avvia() {
 
   // la stella, caricata come texture (finché non arriva, il riflesso è spento)
   const stellaTex = new THREE.TextureLoader().load('assets/img/stella.png', () => {
-    for (const b of bolle) { b.davanti.uniforms.uForzaStella.value = 0.4; }
+    for (const b of bolle) { b.davanti.uniforms.uForzaStella.value = 0.32; }
     disegnaSeFermo();
   });
 
+  const tempoCondiviso = { value: 0 };   // lo stesso orologio per tutte le bolle
   const uniformiBase = () => ({
     uTexture: { value: null }, uStella: { value: stellaTex }, uResolution: { value: new THREE.Vector2() },
     uIorR: { value: 1.15 }, uIorY: { value: 1.16 }, uIorG: { value: 1.18 },
     uIorC: { value: 1.22 }, uIorB: { value: 1.22 }, uIorP: { value: 1.22 },
-    uRefractPower: { value: 0.3 }, uChromatic: { value: 0.5 }, uSaturation: { value: 1.08 },
+    uRefractPower: { value: 0.2 }, uChromatic: { value: 0.5 }, uSaturation: { value: 1.08 },
     uShininess: { value: 90 }, uDiffuseness: { value: 0.02 }, uFresnelPower: { value: 5.0 },
     uLight: { value: new THREE.Vector3(-1, 1, 1) }, uBackside: { value: 0 },
     uTinta: { value: new THREE.Color(1, 1, 1) },
-    uSpostaStella: { value: new THREE.Vector2(-0.12, 0.14) }, uForzaStella: { value: 0 },
-    uColore1: { value: new THREE.Color() }, uColore2: { value: new THREE.Color() }, uForzaColori: { value: 0.8 },
+    uSpostaStella: { value: new THREE.Vector2(-0.04, 0.04) }, uForzaStella: { value: 0 },
+    uColore1: { value: new THREE.Color() }, uColore2: { value: new THREE.Color() }, uForzaColori: { value: 0.45 },
+    uTempo: tempoCondiviso, uSeme: { value: 0 }, uIrregolare: { value: 0.11 },
   });
 
   /* ---------- 3. Le bolle: una per voce ---------- */
@@ -233,13 +255,14 @@ function avvia() {
     const davanti = new THREE.ShaderMaterial({ uniforms: uniformiBase(), vertexShader: vertice, fragmentShader: frammento, side: THREE.FrontSide });
     const dietro = new THREE.ShaderMaterial({ uniforms: uniformiBase(), vertexShader: vertice, fragmentShader: frammento, side: THREE.BackSide });
     dietro.uniforms.uBackside.value = 1;
-    dietro.uniforms.uRefractPower.value = 0.22;
+    dietro.uniforms.uRefractPower.value = 0.14;
     // la tinta del progetto, spenta: mescolata con il grigio
     const tinta = new THREE.Color(v.colore).lerp(new THREE.Color(0.7, 0.7, 0.7), 0.55);
     davanti.uniforms.uTinta.value = tinta;
     dietro.uniforms.uTinta.value = tinta;
-    // i due colori del progetto per i riflessi
+    // i due colori del progetto per i riflessi, e un "seme" perché ogni bolla abbia la sua forma
     for (const m of [davanti, dietro]) {
+      m.uniforms.uSeme.value = i * 1.7 + 0.4;
       m.uniforms.uColore1.value.set(v.colore);
       m.uniforms.uColore2.value.set(v.colore2);
     }
@@ -325,6 +348,7 @@ function avvia() {
       b.y = (casuale(i + 17) - 0.5) * altezzaVista * 0.8;
       const angolo = casuale(i + 23) * Math.PI * 2;
       const velocita = (0.16 + casuale(i + 29) * 0.18) * (altezzaVista / 5.36);   // unità al secondo
+      b.crociera = velocita;
       b.vx = Math.cos(angolo) * velocita;
       b.vy = Math.sin(angolo) * velocita;
     });
@@ -332,6 +356,7 @@ function avvia() {
 
   /* ---------- Il disegno di un fotogramma ---------- */
   function disegna() {
+    if (!menoMovimento) tempoCondiviso.value = performance.now() / 1000;
     for (const b of bolle) {
       const respiro = menoMovimento ? 0 : Math.sin(performance.now() * 0.0009 + b.fase) * 0.03;
       b.sfera.position.set(b.x, b.y, b.voce.indice * 0.02);
@@ -377,6 +402,28 @@ function avvia() {
         if (b.y < -limY || b.y > limY) { b.vy *= -1; b.y = THREE.MathUtils.clamp(b.y, -limY, limY); }
         b.scala += (b.scalaObiettivo - b.scala) * Math.min(1, dt * 8);
       }
+      // le bolle si sfiorano e si intersecano un po', poi si respingono: mai un unico blocco
+      for (let i = 0; i < bolle.length; i++) {
+        for (let j = i + 1; j < bolle.length; j++) {
+          const a = bolle[i], c = bolle[j];
+          if (!a.sfera.visible || !c.sfera.visible || fermo) continue;
+          const dx = c.x - a.x, dy = c.y - a.y;
+          const distanza = Math.hypot(dx, dy) || 0.001;
+          const minima = (a.raggio * a.scala + c.raggio * c.scala) * 0.78;
+          if (distanza < minima) {
+            const spinta = ((minima - distanza) / minima) * 2.2 * dt;
+            const ux = dx / distanza, uy = dy / distanza;
+            a.vx -= ux * spinta; a.vy -= uy * spinta;
+            c.vx += ux * spinta; c.vy += uy * spinta;
+          }
+        }
+      }
+      // ogni bolla torna alla sua velocità di crociera, così nessuna accelera all'infinito
+      for (const b of (fermo ? [] : bolle)) {
+        const v = Math.hypot(b.vx, b.vy) || 0.001;
+        const k = 1 + (b.crociera / v - 1) * Math.min(1, dt * 1.5);
+        b.vx *= k; b.vy *= k;
+      }
       disegna();
       aggiornaEtichetta();
     }
@@ -416,7 +463,7 @@ function avvia() {
   window.addEventListener('pointermove', (e) => {
     // la stella riflessa segue il puntatore: si muove sulla superficie delle bolle
     for (const b of bolle) {
-        b.davanti.uniforms.uSpostaStella.value.set(-0.12 + (e.clientX / L - 0.5) * 0.25, 0.14 - (e.clientY / A - 0.5) * 0.25);
+        b.davanti.uniforms.uSpostaStella.value.set(-0.04 + (e.clientX / L - 0.5) * 0.12, 0.04 - (e.clientY / A - 0.5) * 0.12);
     }
     if (e.target === canvas) evidenzia(bollaSotto(e.clientX, e.clientY));
     else if (sopra && !sopra.daMenu) evidenzia(null);
