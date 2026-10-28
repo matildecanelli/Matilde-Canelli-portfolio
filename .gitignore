@@ -1,0 +1,14 @@
+# Materiale originale: non va pubblicato su GitHub Pages
+materiale-sito/
+
+# File di lavoro dei plugin e di macOS
+.omc/
+.impeccable/config.local.json
+.DS_Store
+
+# File di lavoro di taste (screenshot dei controlli)
+.taste-skill/
+
+# Catture della revisione e impostazioni locali degli strumenti
+.impeccable/review/
+.claude/

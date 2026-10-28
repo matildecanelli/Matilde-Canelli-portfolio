@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matilde Canelli, portfolio di web e visual design</title>
+  <meta name="description" content="Portfolio di Matilde Canelli, web e visual designer: landing page, identità visive, brand e video. Cerco uno stage in sviluppo frontend.">
+
+  <!-- Anteprima quando il link viene condiviso (WhatsApp, LinkedIn, email) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Matilde Canelli, portfolio">
+  <meta property="og:description" content="Web & visual designer. Cerco uno stage in sviluppo frontend.">
+  <meta property="og:image" content="assets/img/anteprima.jpg">
+  <meta property="og:locale" content="it_IT">
+  <meta name="theme-color" content="#f2f1ef">
+
+  <link rel="preload" href="assets/fonts/satoshi-900.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/satoshi-500.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/home.css">
+  <!-- Diciamo subito al CSS che JavaScript c'è, prima che la pagina si disegni -->
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+  <a class="salta" href="#menu">Vai al menu</a>
+
+  <!-- La stella di Matilde, disegnata una volta e riusata con <use> -->
+  <svg class="solo-lettori" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="sgranato" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="9" result="morbido"/>
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="4" result="rumore"/>
+        <feComposite in="morbido" in2="rumore" operator="arithmetic" k1="0" k2="1.4" k3="0.75" k4="-0.62" result="misto"/>
+        <feComponentTransfer in="misto" result="soglia"><feFuncA type="discrete" tableValues="0 1"/></feComponentTransfer>
+        <feFlood flood-color="#510000"/>
+        <feComposite in2="soglia" operator="in"/>
+      </filter>
+      <symbol id="forma-stella" viewBox="0 0 900 940">
+        <path d="M15 10 Q205 225 245 288 Q330 185 520 48 Q405 300 372 372 Q560 445 885 515 Q565 488 352 497 Q425 705 510 928 Q325 700 208 515 Q100 640 18 695 Q150 505 135 345 Q62 205 15 10 Z"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- ===== La scena: nome, PORTFOLIO, bolle, menu ===== -->
+  <div class="palco" data-palco>
+    <header class="testa">
+      <svg class="stella testa__stella" viewBox="0 0 900 940" aria-hidden="true" focusable="false"><use href="#forma-stella" width="900" height="940" filter="url(#sgranato)"/></svg>
+      <p class="testa__chi"><strong>Matilde Canelli</strong><br>Web &amp; visual designer.<br>Cerco uno stage in sviluppo frontend.</p>
+      <a class="link testa__cv" href="assets/docs/Canelli_Matilde_CV.pdf" download>Scarica il CV</a>
+    </header>
+
+    <!-- Il titolo vero è il testo nascosto; la scritta grande la disegna js/palco.js.
+         Senza JavaScript si vede PORTFOLIO scritto normalmente. -->
+    <h1 class="palco__titolo">
+      <span class="solo-lettori">Portfolio di Matilde Canelli</span>
+      <span class="palco__riserva" aria-hidden="true">Portfolio</span>
+    </h1>
+    <svg class="palco__scena" data-scena aria-hidden="true" focusable="false"></svg>
+
+    <!-- Il menu: ogni voce è anche una bolla che viaggia sulla scena -->
+    <nav class="menu" id="menu" aria-label="Progetti e pagine">
+      <ul>
+        <li><a href="#imaze" data-voce="imaze" style="--c1:#e13155; --c2:#1d1d1b"><span class="pallino" aria-hidden="true"></span>Imaze</a></li>
+        <li><a href="#synapses" data-voce="synapses" style="--c1:#fcc505; --c2:#ed7238"><span class="pallino" aria-hidden="true"></span>Synapses</a></li>
+        <li><a href="#ju1ce" data-voce="ju1ce" style="--c1:#a0db2e; --c2:#5120f5"><span class="pallino" aria-hidden="true"></span>JU1CE</a></li>
+        <li><a href="#energiapura" data-voce="energiapura" style="--c1:#519898; --c2:#1b2859"><span class="pallino" aria-hidden="true"></span>EnergiaPura</a></li>
+        <li><a href="#virtuoso" data-voce="virtuoso" style="--c1:#b28c83; --c2:#510000"><span class="pallino" aria-hidden="true"></span>Virtuoso</a></li>
+        <li class="menu__stacco"><a href="#chi-sono" data-voce="chi-sono" style="--c1:#c0392b; --c2:#510000"><span class="pallino" aria-hidden="true"></span>Chi sono</a></li>
+        <li><a href="#contatti" data-voce="contatti" style="--c1:#510000; --c2:#120202"><span class="pallino" aria-hidden="true"></span>Contatti</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- ===== I pannelli =====
+       Con JavaScript ognuno si apre sopra la scena, uscendo dalla sua bolla.
+       Senza JavaScript sono semplici sezioni una sotto l'altra. -->
+  <main class="pannelli" id="contenuto">
+
+    <section class="pannello" id="imaze" aria-labelledby="imaze-titolo" data-pannello style="--c1:#e13155; --c2:#1d1d1b; --titolo:#c22448">
+      <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
+      <div class="pannello__testo">
+        <h2 class="pannello__titolo" id="imaze-titolo" tabindex="-1"><span>Landing page</span> <span class="pannello__nome">Imaze</span></h2>
+        <dl class="scheda">
+          <div><dt>Anno</dt><dd>2026</dd></div>
+          <div><dt>Contesto</dt><dd>Incarico per Imaze Rent, studio di produzione visiva a Montecchio Maggiore (VI)</dd></div>
+          <div><dt>Ruolo</dt><dd>Progetto individuale: design e sviluppo</dd></div>
+          <div><dt>Obiettivo</dt><dd>Presentare lo studio e il set, accompagnando l'utente dalla scoperta dello spazio fino alla richiesta di prenotazione, con lo stile deciso del brand: font Safiro, fucsia, bianco e nero.</dd></div>
+          <div><dt>Processo</dt><dd>Ho esplorato tre direzioni visive con l'AI e il vibe coding, poi ho sviluppato e rifinito la pagina in HTML, CSS (Tailwind) e JavaScript.</dd></div>
+          <div><dt>Risultato</dt><dd>Una landing con sezioni su spazio, utilizzi, setup, team e FAQ, e un modulo per prenotare lo studio o l'attrezzatura.</dd></div>
+        </dl>
+        <p><a class="link" href="https://matildecanelli.github.io/LP-IMAZE-RENT--safiro/">Guarda la landing page</a></p>
+      </div>
+      <div class="pannello__immagini">
+        <figure class="largo"><img src="assets/img/lavori/imaze.jpg" width="840" height="560" loading="lazy" alt="La landing page di Imaze Rent: il titolo Il tuo prossimo set su fondo fucsia"><figcaption>La landing page finale</figcaption></figure>
+        <figure><img src="assets/img/pannelli/imaze-essenziale.jpg" width="733" height="1100" loading="lazy" alt="Esplorazione essenziale: fucsia e nero, impaginazione pulita"><figcaption>Direzione essenziale</figcaption></figure>
+        <figure><img src="assets/img/pannelli/imaze-collage.jpg" width="519" height="1100" loading="lazy" alt="Esplorazione collage: fondo crema, foto ritagliate e scritte a mano"><figcaption>Direzione collage</figcaption></figure>
+        <figure><img src="assets/img/pannelli/imaze-editoriale.jpg" width="455" height="1100" loading="lazy" alt="Esplorazione editoriale: titoli enormi e accento lime"><figcaption>Direzione editoriale</figcaption></figure>
+      </div>
+      <p class="pannello__dopo"><a class="link" href="#synapses">Progetto successivo: Synapses</a></p>
+    </section>
+
+    <section class="pannello" id="synapses" aria-labelledby="synapses-titolo" data-pannello style="--c1:#fcc505; --c2:#ed7238; --titolo:#b04614">
+      <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
+      <div class="pannello__testo">
+        <h2 class="pannello__titolo" id="synapses-titolo" tabindex="-1"><span>Progetto</span> <span class="pannello__nome">Synapses</span></h2>
+        <dl class="scheda">
+          <div><dt>Anno</dt><dd>a.a. 2025/2026</dd></div>
+          <div><dt>Contesto</dt><dd>Corso di Art Direction, LABA Brescia</dd></div>
+          <div><dt>Ruolo</dt><dd>Lavoro di gruppo: art direction, poi team grafica e team merchandising</dd></div>
+          <div><dt>Obiettivo</dt><dd>Dare una nuova immagine a Synapses, l'evento culturale di LABA: un sistema visivo flessibile che rappresenti connessione, sperimentazione e multidisciplinarità, su supporti fisici e digitali.</dd></div>
+          <div><dt>Processo</dt><dd>Forme isometriche che si incastrano come le connessioni tra le discipline; esplorazioni per l'Expo della Creatività.</dd></div>
+          <div><dt>Risultato</dt><dd><strong>Il progetto è stato adottato da LABA</strong> come identità ufficiale di Synapses 2026: sito, locandine, allestimenti, newsletter e merchandising.</dd></div>
+        </dl>
+        <h3 class="pannello__sotto">Prōsopon, la sfilata</h3>
+        <p>Per la sfilata il sistema doveva diventare più elegante: dai colori del festival a una palette fredda, con le foto delle modelle e le texture dei tessuti.</p>
+      </div>
+      <div class="pannello__immagini">
+        <figure class="largo"><img src="assets/img/lavori/synapses.jpg" width="680" height="850" loading="lazy" alt="Locandina di Synapses attaccata a una porta di metallo arrugginita"><figcaption>La locandina</figcaption></figure>
+        <figure class="largo"><img src="assets/img/pannelli/synapses-esplorazioni.jpg" width="1100" height="618" loading="lazy" alt="Esplorazioni per l'Expo della Creatività, con la versione scelta cerchiata in rosso"><figcaption>Esplorazioni: la versione scelta è cerchiata in rosso</figcaption></figure>
+        <figure class="largo"><img src="assets/img/pannelli/synapses-allestimento.jpg" width="1100" height="543" loading="lazy" alt="Allestimento in LABA: strisce colorate sul pavimento dei corridoi"><figcaption>Allestimento</figcaption></figure>
+        <figure class="largo"><img src="assets/img/pannelli/synapses-merch.jpg" width="1100" height="618" loading="lazy" alt="Magliette del merchandising di Synapses"><figcaption>Merchandising</figcaption></figure>
+        <figure><img src="assets/img/pannelli/prosopon-chiara.jpg" width="730" height="912" loading="lazy" alt="Locandina finale di Prōsopon, versione chiara"><figcaption>Prōsopon, versione chiara</figcaption></figure>
+        <figure><img src="assets/img/pannelli/prosopon-scura.jpg" width="730" height="912" loading="lazy" alt="Locandina finale di Prōsopon, versione scura"><figcaption>Prōsopon, versione scura</figcaption></figure>
+        <figure class="largo"><img src="assets/img/pannelli/prosopon-invito.jpg" width="1100" height="625" loading="lazy" alt="Invito di Prōsopon, fronte e retro"><figcaption>L'invito, fronte e retro</figcaption></figure>
+      </div>
+      <p class="pannello__dopo"><a class="link" href="#ju1ce">Progetto successivo: JU1CE</a></p>
+    </section>
+
+    <section class="pannello" id="ju1ce" aria-labelledby="ju1ce-titolo" data-pannello style="--c1:#a0db2e; --c2:#5120f5; --titolo:#5120f5">
+      <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
+      <div class="pannello__testo">
+        <h2 class="pannello__titolo" id="ju1ce-titolo" tabindex="-1"><span>Progetto</span> <span class="pannello__nome">JU1CE</span></h2>
+        <dl class="scheda">
+          <div><dt>Anno</dt><dd>2025</dd></div>
+          <div><dt>Contesto</dt><dd>Tesi di laurea triennale, IUSVE</dd></div>
+          <div><dt>Ruolo</dt><dd>Progetto individuale: concept, naming, brand identity, organizzazione e comunicazione</dd></div>
+          <div><dt>Obiettivo</dt><dd>Garantire alle donne una serata senza pericoli con un format di evento notturno accessibile solo a loro, e allo stesso tempo provocare: il fatto che serva un evento così è già il messaggio.</dd></div>
+          <div><dt>Processo</dt><dd>Schizzi a mano, poi il logo ridisegnato e un pattern di frutti; il cartone di succo con QR è sia sticker sia sottobicchiere.</dd></div>
+          <div><dt>Risultato</dt><dd>Brand identity, manifesti, flyer, sticker e sottobicchieri, con un piano di comunicazione online e offline tra marketing tradizionale e unconventional. Format progettato fino alla comunicazione, non realizzato.</dd></div>
+        </dl>
+      </div>
+      <div class="pannello__immagini">
+        <figure><img src="assets/img/pannelli/ju1ce-locandina.jpg" width="596" height="836" loading="lazy" alt="Locandina viola di JU1CE con una mano che spreme un lime"><figcaption>La locandina scelta</figcaption></figure>
+        <figure><img src="assets/img/pannelli/ju1ce-schizzi.jpg" width="594" height="1100" loading="lazy" alt="Schizzi a mano del logo JU1CE"><figcaption>Gli schizzi a mano</figcaption></figure>
+        <figure class="largo"><img src="assets/img/pannelli/ju1ce-logo.jpg" width="1100" height="969" loading="lazy" alt="Il logo JU1CE ridisegnato"><figcaption>Il logo</figcaption></figure>
+        <figure class="largo"><img src="assets/img/pannelli/ju1ce-sticker.jpg" width="1011" height="561" loading="lazy" alt="Sticker a forma di cartone di succo con QR code, in viola e in verde"><figcaption>Sticker e sottobicchieri</figcaption></figure>
+      </div>
+      <p class="pannello__dopo"><a class="link" href="#energiapura">Progetto successivo: EnergiaPura</a></p>
+    </section>
+
+    <section class="pannello" id="energiapura" aria-labelledby="energiapura-titolo" data-pannello style="--c1:#519898; --c2:#1b2859; --titolo:#1b2859">
+      <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
+      <div class="pannello__testo">
+        <h2 class="pannello__titolo" id="energiapura-titolo" tabindex="-1"><span>Progetto</span> <span class="pannello__nome">EnergiaPura</span></h2>
+        <dl class="scheda">
+          <div><dt>Anno</dt><dd>a.a. 2022/2023</dd></div>
+          <div><dt>Contesto</dt><dd>Laboratorio IUSVE con brief reale di EnergiaPura, abbigliamento tecnico sportivo</dd></div>
+          <div><dt>Ruolo</dt><dd>Lavoro di gruppo: art direction, moodboard e storyboard; assistente a produzione, set e montaggio</dd></div>
+          <div><dt>Obiettivo</dt><dd>Un video che rendesse protagonista il processo di produzione dei capi, mettendo in luce sostenibilità e cura dell'ambiente, coerente con tono di voce e brand identity di EnergiaPura.</dd></div>
+          <div><dt>Risultato</dt><dd>Tra i dieci migliori lavori delle sedi IUSVE di Verona e Mestre. Alla premiazione con l'azienda il video ha vinto il <strong>premio Miglior Soggetto</strong>.</dd></div>
+        </dl>
+        <p><a class="link" href="https://matildecanelli.github.io/Lading-video-EnergiaPura/">Guarda il video</a></p>
+      </div>
+      <div class="pannello__immagini">
+        <figure class="largo"><img src="assets/img/pannelli/energiapura-pellicola.jpg" width="1100" height="900" loading="lazy" alt="Fotogrammi del video su una pellicola: un telo azzurro nel vento e uno scoglio nel mare"><figcaption>Fotogrammi del video</figcaption></figure>
+      </div>
+      <p class="pannello__dopo"><a class="link" href="#virtuoso">Progetto successivo: Virtuoso</a></p>
+    </section>
+
+    <section class="pannello" id="virtuoso" aria-labelledby="virtuoso-titolo" data-pannello style="--c1:#b28c83; --c2:#510000; --titolo:#510000">
+      <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
+      <div class="pannello__testo">
+        <h2 class="pannello__titolo" id="virtuoso-titolo" tabindex="-1"><span>Progetto</span> <span class="pannello__nome">Virtuoso</span></h2>
+        <dl class="scheda">
+          <div><dt>Anno</dt><dd>a.a. 2025/2026</dd></div>
+          <div><dt>Contesto</dt><dd>Corso di Art Direction</dd></div>
+          <div><dt>Ruolo</dt><dd>Progetto individuale</dd></div>
+          <div><dt>Obiettivo</dt><dd>Sviluppare la direzione creativa di un prodotto ispirato a una passione personale: un brand di skincare che unisce la cura della pelle al mondo della musica.</dd></div>
+          <div><dt>Processo e risultato</dt><dd>Archetipo del brand, naming, moodboard, palette cromatica e font (Gunter, Quiche Sans Light), fino al packaging: un'identità coerente e riconoscibile.</dd></div>
+        </dl>
+      </div>
+      <div class="pannello__immagini">
+        <figure><img src="assets/img/lavori/virtuoso.jpg" width="554" height="692" loading="lazy" alt="Campagna Virtuoso: una modella con un binocolo da teatro e il vasetto della crema"><figcaption>La campagna</figcaption></figure>
+        <figure><img src="assets/img/pannelli/virtuoso-packaging.jpg" width="644" height="420" loading="lazy" alt="Packaging Virtuoso: flaconi a forma di violino e una crema a forma di tamburo"><figcaption>Il packaging</figcaption></figure>
+      </div>
+      <p class="pannello__dopo"><a class="link" href="#imaze">Ricomincia: Imaze</a></p>
+    </section>
+
+    <section class="pannello" id="chi-sono" aria-labelledby="chi-sono-titolo" data-pannello style="--c1:#c0392b; --c2:#510000; --titolo:#510000">
+      <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
+      <div class="pannello__testo pannello__testo--largo">
+        <h2 class="pannello__titolo" id="chi-sono-titolo" tabindex="-1"><span class="pannello__nome">Ma chi è?</span></h2>
+        <p class="pannello__frase">Domanda più che lecita.</p>
+        <p>Piacere, sono Matilde. Vengo da un paese in provincia di Vicenza, dal quale sono scappata per andare dritta a Verona, dove ho studiato Advertising &amp; Marketing allo IUSVE. Poi mi sono trasferita a Brescia per la magistrale in Digital Design &amp; Communication alla LABA, con un obiettivo preciso: il web design.</p>
+        <p>Della comunicazione e della grafica mi piace poter progettare, fare domande e creare connessioni. Credo che la differenza stia nella cura dei dettagli: forse per questo mi complico la vita finché un progetto non mi convince davvero.</p>
+        <p>Per il resto lascio parlare i miei lavori.</p>
+      </div>
+      <svg class="stella pannello__stella" viewBox="0 0 900 940" aria-hidden="true" focusable="false"><use href="#forma-stella" width="900" height="940" filter="url(#sgranato)"/></svg>
+    </section>
+
+    <section class="pannello" id="contatti" aria-labelledby="contatti-titolo" data-pannello style="--c1:#510000; --c2:#120202; --titolo:#510000">
+      <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
+      <div class="pannello__testo pannello__testo--largo">
+        <h2 class="pannello__titolo" id="contatti-titolo" tabindex="-1"><span class="pannello__nome">Contatti</span></h2>
+        <p class="pannello__frase">Cerco uno stage in sviluppo frontend. Scrivimi.</p>
+        <a class="contatti__email" href="mailto:canellimatildee@gmail.com">canellimatildee@<wbr>gmail.com</a>
+        <dl class="scheda scheda--contatti">
+          <div><dt>Telefono</dt><dd><a class="link" href="tel:+393711970506">+39 371 197 0506</a></dd></div>
+          <div><dt>LinkedIn</dt><dd><a class="link" href="https://www.linkedin.com/in/matilde-canelli-91ab14238">matilde-canelli</a></dd></div>
+          <div><dt>GitHub</dt><dd><a class="link" href="https://github.com/matildecanelli">matildecanelli</a></dd></div>
+          <div><dt>CV</dt><dd><a class="link" href="assets/docs/Canelli_Matilde_CV.pdf" download>Scarica il PDF</a></dd></div>
+        </dl>
+        <!-- Quando il repository del sito avrà il suo nome definitivo, qui va il link diretto -->
+        <p class="contatti__codice">Questo sito l'ho progettato e sviluppato io, in HTML, CSS e JavaScript. Il codice sarà pubblicato sul mio <a class="link" href="https://github.com/matildecanelli">profilo GitHub</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/palco.js" defer></script>
+  <script src="js/pannelli.js" defer></script>
+</body>
+</html>

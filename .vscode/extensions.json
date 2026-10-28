@@ -1,0 +1,6 @@
+{
+  // Estensioni consigliate per questo progetto: VS Code te le propone all'apertura
+  "recommendations": [
+    "ritwickdey.LiveServer"
+  ]
+}

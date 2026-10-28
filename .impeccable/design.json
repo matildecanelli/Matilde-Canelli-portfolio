@@ -1,0 +1,512 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-28T10:30:00+01:00",
+  "title": "Design System: Matilde Canelli, portfolio",
+  "extensions": {
+    "colorMeta": {
+      "carta": {
+        "role": "neutral",
+        "displayName": "Carta Calda",
+        "canonical": "#f2f1ef",
+        "tonalRamp": [
+          "oklch(15% 0.003 84.6)",
+          "oklch(27% 0.003 84.6)",
+          "oklch(39% 0.003 84.6)",
+          "oklch(51% 0.003 84.6)",
+          "oklch(63% 0.003 84.6)",
+          "oklch(75% 0.003 84.6)",
+          "oklch(85% 0.003 84.6)",
+          "oklch(95% 0.003 84.6)"
+        ]
+      },
+      "pannello": {
+        "role": "neutral",
+        "displayName": "Carta Pannello",
+        "canonical": "#fbfaf8",
+        "tonalRamp": [
+          "oklch(15% 0.003 84.6)",
+          "oklch(27% 0.003 84.6)",
+          "oklch(39% 0.003 84.6)",
+          "oklch(51% 0.003 84.6)",
+          "oklch(63% 0.003 84.6)",
+          "oklch(75% 0.003 84.6)",
+          "oklch(85% 0.003 84.6)",
+          "oklch(95% 0.003 84.6)"
+        ]
+      },
+      "nero": {
+        "role": "primary",
+        "displayName": "Nero Inchiostro",
+        "canonical": "#141212",
+        "tonalRamp": [
+          "oklch(15% 0.003 17.5)",
+          "oklch(27% 0.003 17.5)",
+          "oklch(39% 0.003 17.5)",
+          "oklch(51% 0.003 17.5)",
+          "oklch(63% 0.003 17.5)",
+          "oklch(75% 0.003 17.5)",
+          "oklch(85% 0.003 17.5)",
+          "oklch(95% 0.003 17.5)"
+        ]
+      },
+      "tenue": {
+        "role": "neutral",
+        "displayName": "Grigio Tenue",
+        "canonical": "#57524f",
+        "tonalRamp": [
+          "oklch(15% 0.008 53.3)",
+          "oklch(27% 0.008 53.3)",
+          "oklch(39% 0.008 53.3)",
+          "oklch(51% 0.008 53.3)",
+          "oklch(63% 0.008 53.3)",
+          "oklch(75% 0.008 53.3)",
+          "oklch(85% 0.008 53.3)",
+          "oklch(95% 0.008 53.3)"
+        ]
+      },
+      "bordeaux": {
+        "role": "secondary",
+        "displayName": "Bordeaux Stella",
+        "canonical": "#510000",
+        "tonalRamp": [
+          "oklch(15% 0.112 29.2)",
+          "oklch(27% 0.112 29.2)",
+          "oklch(39% 0.112 29.2)",
+          "oklch(51% 0.112 29.2)",
+          "oklch(63% 0.112 29.2)",
+          "oklch(75% 0.099 29.2)",
+          "oklch(85% 0.087 29.2)",
+          "oklch(95% 0.076 29.2)"
+        ]
+      },
+      "imaze-fucsia": {
+        "role": "tertiary",
+        "displayName": "Fucsia Imaze",
+        "canonical": "#e13155",
+        "tonalRamp": [
+          "oklch(15% 0.155 15.5)",
+          "oklch(27% 0.181 15.5)",
+          "oklch(39% 0.206 15.5)",
+          "oklch(51% 0.210 15.5)",
+          "oklch(63% 0.210 15.5)",
+          "oklch(75% 0.210 15.5)",
+          "oklch(85% 0.198 15.5)",
+          "oklch(95% 0.177 15.5)"
+        ]
+      },
+      "imaze-nero": {
+        "role": "tertiary",
+        "displayName": "Nero Imaze",
+        "canonical": "#1d1d1b",
+        "tonalRamp": [
+          "oklch(15% 0.004 106.7)",
+          "oklch(27% 0.004 106.7)",
+          "oklch(39% 0.004 106.7)",
+          "oklch(51% 0.004 106.7)",
+          "oklch(63% 0.004 106.7)",
+          "oklch(75% 0.004 106.7)",
+          "oklch(85% 0.004 106.7)",
+          "oklch(95% 0.004 106.7)"
+        ]
+      },
+      "imaze-titolo": {
+        "role": "tertiary",
+        "displayName": "Fucsia Scuro (titolo Imaze)",
+        "canonical": "#c22448",
+        "tonalRamp": [
+          "oklch(15% 0.158 14.8)",
+          "oklch(27% 0.181 14.8)",
+          "oklch(39% 0.191 14.8)",
+          "oklch(51% 0.191 14.8)",
+          "oklch(63% 0.191 14.8)",
+          "oklch(75% 0.190 14.8)",
+          "oklch(85% 0.170 14.8)",
+          "oklch(95% 0.151 14.8)"
+        ]
+      },
+      "synapses-giallo": {
+        "role": "tertiary",
+        "displayName": "Giallo Synapses",
+        "canonical": "#fcc505",
+        "tonalRamp": [
+          "oklch(15% 0.092 88.1)",
+          "oklch(27% 0.113 88.1)",
+          "oklch(39% 0.134 88.1)",
+          "oklch(51% 0.154 88.1)",
+          "oklch(63% 0.173 88.1)",
+          "oklch(75% 0.173 88.1)",
+          "oklch(85% 0.173 88.1)",
+          "oklch(95% 0.173 88.1)"
+        ]
+      },
+      "synapses-arancio": {
+        "role": "tertiary",
+        "displayName": "Arancio Synapses",
+        "canonical": "#ed7238",
+        "tonalRamp": [
+          "oklch(15% 0.118 43.7)",
+          "oklch(27% 0.138 43.7)",
+          "oklch(39% 0.158 43.7)",
+          "oklch(51% 0.168 43.7)",
+          "oklch(63% 0.168 43.7)",
+          "oklch(75% 0.168 43.7)",
+          "oklch(85% 0.168 43.7)",
+          "oklch(95% 0.164 43.7)"
+        ]
+      },
+      "synapses-titolo": {
+        "role": "tertiary",
+        "displayName": "Arancio Bruciato (titolo Synapses)",
+        "canonical": "#b04614",
+        "tonalRamp": [
+          "oklch(15% 0.133 41.7)",
+          "oklch(27% 0.150 41.7)",
+          "oklch(39% 0.150 41.7)",
+          "oklch(51% 0.150 41.7)",
+          "oklch(63% 0.150 41.7)",
+          "oklch(75% 0.150 41.7)",
+          "oklch(85% 0.142 41.7)",
+          "oklch(95% 0.127 41.7)"
+        ]
+      },
+      "ju1ce-lime": {
+        "role": "tertiary",
+        "displayName": "Lime JU1CE",
+        "canonical": "#a0db2e",
+        "tonalRamp": [
+          "oklch(15% 0.105 127.5)",
+          "oklch(27% 0.129 127.5)",
+          "oklch(39% 0.153 127.5)",
+          "oklch(51% 0.177 127.5)",
+          "oklch(63% 0.199 127.5)",
+          "oklch(75% 0.199 127.5)",
+          "oklch(85% 0.199 127.5)",
+          "oklch(95% 0.199 127.5)"
+        ]
+      },
+      "ju1ce-viola": {
+        "role": "tertiary",
+        "displayName": "Viola JU1CE",
+        "canonical": "#5120f5",
+        "tonalRamp": [
+          "oklch(15% 0.223 279.1)",
+          "oklch(27% 0.257 279.1)",
+          "oklch(39% 0.277 279.1)",
+          "oklch(51% 0.277 279.1)",
+          "oklch(63% 0.277 279.1)",
+          "oklch(75% 0.244 279.1)",
+          "oklch(85% 0.217 279.1)",
+          "oklch(95% 0.189 279.1)"
+        ]
+      },
+      "energiapura-acqua": {
+        "role": "tertiary",
+        "displayName": "Verde Acqua EnergiaPura",
+        "canonical": "#519898",
+        "tonalRamp": [
+          "oklch(15% 0.072 195.5)",
+          "oklch(27% 0.072 195.5)",
+          "oklch(39% 0.072 195.5)",
+          "oklch(51% 0.072 195.5)",
+          "oklch(63% 0.072 195.5)",
+          "oklch(75% 0.072 195.5)",
+          "oklch(85% 0.072 195.5)",
+          "oklch(95% 0.072 195.5)"
+        ]
+      },
+      "energiapura-blu": {
+        "role": "tertiary",
+        "displayName": "Blu Notte EnergiaPura",
+        "canonical": "#1b2859",
+        "tonalRamp": [
+          "oklch(15% 0.090 269.1)",
+          "oklch(27% 0.090 269.1)",
+          "oklch(39% 0.090 269.1)",
+          "oklch(51% 0.090 269.1)",
+          "oklch(63% 0.090 269.1)",
+          "oklch(75% 0.089 269.1)",
+          "oklch(85% 0.080 269.1)",
+          "oklch(95% 0.071 269.1)"
+        ]
+      },
+      "virtuoso-rosa": {
+        "role": "tertiary",
+        "displayName": "Rosa Cipria Virtuoso",
+        "canonical": "#b28c83",
+        "tonalRamp": [
+          "oklch(15% 0.048 33.6)",
+          "oklch(27% 0.048 33.6)",
+          "oklch(39% 0.048 33.6)",
+          "oklch(51% 0.048 33.6)",
+          "oklch(63% 0.048 33.6)",
+          "oklch(75% 0.048 33.6)",
+          "oklch(85% 0.048 33.6)",
+          "oklch(95% 0.048 33.6)"
+        ]
+      },
+      "chi-sono-rosso": {
+        "role": "tertiary",
+        "displayName": "Rosso Mattone Chi sono",
+        "canonical": "#c0392b",
+        "tonalRamp": [
+          "oklch(15% 0.146 29.7)",
+          "oklch(27% 0.166 29.7)",
+          "oklch(39% 0.174 29.7)",
+          "oklch(51% 0.174 29.7)",
+          "oklch(63% 0.174 29.7)",
+          "oklch(75% 0.174 29.7)",
+          "oklch(85% 0.161 29.7)",
+          "oklch(95% 0.143 29.7)"
+        ]
+      },
+      "contatti-notte": {
+        "role": "tertiary",
+        "displayName": "Notte Bordeaux Contatti",
+        "canonical": "#120202",
+        "tonalRamp": [
+          "oklch(15% 0.037 24.1)",
+          "oklch(27% 0.037 24.1)",
+          "oklch(39% 0.037 24.1)",
+          "oklch(51% 0.037 24.1)",
+          "oklch(63% 0.037 24.1)",
+          "oklch(75% 0.037 24.1)",
+          "oklch(85% 0.037 24.1)",
+          "oklch(95% 0.037 24.1)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "PORTFOLIO",
+        "purpose": "Solo la parola PORTFOLIO in SVG, adattata alla larghezza della scena; due righe sotto 640px."
+      },
+      "headline": {
+        "displayName": "Titolo pannello",
+        "purpose": "Titolo del pannello su due righe, il nome in --titolo."
+      },
+      "title": {
+        "displayName": "Frase",
+        "purpose": "Voci del menu, frase d'apertura, link al progetto successivo."
+      },
+      "body": {
+        "displayName": "Testo",
+        "purpose": "Scheda del progetto e paragrafi."
+      },
+      "label": {
+        "displayName": "Piccolo",
+        "purpose": "Nome e ruolo in testa, didascalie, Chiudi, nome della bolla al passaggio."
+      }
+    },
+    "shadows": [],
+    "depth": [
+      {
+        "name": "scena-sfocata",
+        "value": "filter: blur(10px); opacity: 0.45; transition: filter 600ms ease, opacity 600ms ease",
+        "purpose": "La scena dietro un pannello aperto."
+      },
+      {
+        "name": "riflesso-bolla",
+        "value": "ellipse fill #fff, opacity 0.5, feGaussianBlur stdDeviation 6; punto di luce opacity 0.9",
+        "purpose": "La lucentezza delle bolle."
+      },
+      {
+        "name": "gradiente-lucido",
+        "value": "radial-gradient(circle at 35% 30%, #fff 0 8%, var(--c1) 40%, var(--c2) 100%)",
+        "purpose": "Pallino del menu; lo strato dell'apertura usa #fff 0 4% e --c1 38%."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Hover del pallino (300ms) e di Chiudi (200ms), comparsa dei contenuti del pannello."
+      },
+      {
+        "name": "apertura-pannello",
+        "value": "1150ms cubic-bezier(0.76, 0, 0.24, 1)",
+        "purpose": "clip-path dalla bolla ai vertici (offset 0.55) al pannello inset(ritaglio round 28px)."
+      },
+      {
+        "name": "chiusura-pannello",
+        "value": "700ms cubic-bezier(0.76, 0, 0.24, 1)",
+        "purpose": "Il pannello torna nel cerchio della sua bolla."
+      },
+      {
+        "name": "strato-colore",
+        "value": "1150ms ease-out, opacity 1 fino al 50% poi 0",
+        "purpose": "Il colore della bolla che svanisce durante l'apertura."
+      },
+      {
+        "name": "comparsa-contenuti",
+        "value": "1150ms, translateY(24px) e opacity 0 fino al 55%",
+        "purpose": "I contenuti arrivano dopo il ritaglio."
+      },
+      {
+        "name": "gonfia-bolla",
+        "value": "scala 1.18, avvicinamento 0.15 per fotogramma",
+        "purpose": "Hover o focus sulla voce o sulla bolla."
+      },
+      {
+        "name": "deriva-bolle",
+        "value": "velocita 0.35-0.75 px/frame x max(0.6, L/1440), rimbalzo nel recinto, rotazione 0.04 gradi/frame, respiro ovale +-6%",
+        "purpose": "Il viaggio continuo delle bolle."
+      },
+      {
+        "name": "respiro-liquido",
+        "value": "baseFrequency 0.006;0.009;0.006 in 10s",
+        "purpose": "Il liquido nelle lettere, solo oltre 700px."
+      },
+      {
+        "name": "link",
+        "value": "text-decoration-thickness 1.5px -> 3px in 200ms ease",
+        "purpose": "Hover dei link."
+      },
+      {
+        "name": "movimento-ridotto",
+        "value": "bolle ferme, nessun respiro, pannello in dissolvenza 250ms, chiusura immediata",
+        "purpose": "prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "menu-in-basso",
+        "value": "40rem"
+      },
+      {
+        "name": "scena-stretta",
+        "value": "640px"
+      },
+      {
+        "name": "liquido-animato",
+        "value": "700px"
+      },
+      {
+        "name": "pannello-una-colonna",
+        "value": "52rem"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Bolla",
+      "kind": "custom",
+      "refersTo": "pallino",
+      "description": "La lente lucida della scena: gradiente nei due colori, riflesso e punto di luce; si gonfia al passaggio.",
+      "html": "<a class=\"ds-bolla\" href=\"#imaze\" style=\"--c1:#e13155;--c2:#1d1d1b\"><span class=\"ds-bolla__nome\">Imaze</span></a>",
+      "css": ".ds-bolla{position:relative;display:block;width:160px;height:120px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 6%,var(--c1) 12% 55%,var(--c2) 100%);transition:transform 300ms cubic-bezier(0.22,1,0.36,1);text-decoration:none}.ds-bolla::before{content:\"\";position:absolute;left:20%;top:12%;width:30%;height:16%;border-radius:50%;background:#fff;opacity:.5;filter:blur(6px)}.ds-bolla__nome{position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);font:700 14px Satoshi,'Helvetica Neue',Arial,sans-serif;color:#141212;opacity:0;transition:opacity 200ms ease}.ds-bolla:hover,.ds-bolla:focus-visible{transform:scale(1.18)}.ds-bolla:hover .ds-bolla__nome,.ds-bolla:focus-visible .ds-bolla__nome{opacity:1}.ds-bolla:focus-visible{outline:3px solid #141212;outline-offset:3px}"
+    },
+    {
+      "name": "Voce del menu",
+      "kind": "nav",
+      "refersTo": "menu-voce",
+      "description": "Menu verticale a destra: voce in 700 con il pallino della sua bolla, che cresce al passaggio.",
+      "html": "<nav class=\"ds-menu\"><a href=\"#imaze\" style=\"--c1:#e13155;--c2:#1d1d1b\"><span class=\"ds-pallino\"></span>Imaze</a><a href=\"#synapses\" style=\"--c1:#fcc505;--c2:#ed7238\"><span class=\"ds-pallino\"></span>Synapses</a><a href=\"#ju1ce\" style=\"--c1:#a0db2e;--c2:#5120f5\"><span class=\"ds-pallino\"></span>JU1CE</a><a class=\"ds-menu__stacco\" href=\"#chi-sono\" style=\"--c1:#c0392b;--c2:#510000\"><span class=\"ds-pallino\"></span>Chi sono</a></nav>",
+      "css": ".ds-menu{display:grid;gap:.15rem;justify-items:end;font-family:Satoshi,'Helvetica Neue',Arial,sans-serif}.ds-menu a{display:inline-flex;align-items:center;gap:.6rem;padding:.35rem 0;font-size:clamp(1.25rem,1.05rem + .8vw,1.75rem);font-weight:700;letter-spacing:-.02em;color:#141212;text-decoration:none}.ds-menu__stacco{margin-top:1rem}.ds-pallino{display:inline-block;width:.85em;height:.85em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 8%,var(--c1) 40%,var(--c2) 100%);transition:transform 300ms cubic-bezier(0.22,1,0.36,1)}.ds-menu a:hover .ds-pallino,.ds-menu a:focus-visible .ds-pallino{transform:scale(1.5)}.ds-menu a:focus-visible{outline:3px solid #141212;outline-offset:3px;border-radius:3px}"
+    },
+    {
+      "name": "Chiudi",
+      "kind": "button",
+      "refersTo": "button-chiudi",
+      "description": "L'unico pulsante: pillola nera che chiude il pannello.",
+      "html": "<button class=\"ds-chiudi\" type=\"button\">Chiudi</button>",
+      "css": ".ds-chiudi{display:inline-flex;align-items:center;justify-content:center;min-width:2.75rem;min-height:2.75rem;padding:0 1.1rem;border:0;border-radius:999px;background:#141212;color:#f2f1ef;font:700 .875rem Satoshi,'Helvetica Neue',Arial,sans-serif;cursor:pointer;transition:transform 200ms cubic-bezier(0.22,1,0.36,1)}.ds-chiudi:hover{transform:scale(1.06)}.ds-chiudi:focus-visible{outline:3px solid #141212;outline-offset:3px}"
+    },
+    {
+      "name": "Link",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "Link nel testo: sottolineatura che si ispessisce al passaggio.",
+      "html": "<a class=\"ds-link\" href=\"#\">Scarica il CV</a>",
+      "css": ".ds-link{color:#141212;font:700 .875rem Satoshi,'Helvetica Neue',Arial,sans-serif;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:.25em;transition:text-decoration-thickness 200ms ease}.ds-link:hover{text-decoration-thickness:3px}.ds-link:focus-visible{outline:3px solid #141212;outline-offset:3px;border-radius:3px}"
+    },
+    {
+      "name": "Pannello",
+      "kind": "card",
+      "refersTo": "pannello",
+      "description": "Il contenuto di una voce: carta piu chiara, angoli a 28px, titolo su due righe con il nome in --titolo, scheda.",
+      "html": "<section class=\"ds-pannello\" style=\"--titolo:#c22448\"><h2 class=\"ds-pannello__titolo\"><span>Landing page</span> <span class=\"ds-pannello__nome\">Imaze</span></h2><dl class=\"ds-scheda\"><div><dt>Anno</dt><dd>2026</dd></div><div><dt>Ruolo</dt><dd>Progetto individuale: design e sviluppo</dd></div></dl></section>",
+      "css": ".ds-pannello{display:grid;gap:1.5rem;padding:clamp(1.25rem,4vw,4rem);border-radius:28px;background:#fbfaf8;color:#141212;font:400 clamp(1rem,.95rem + .25vw,1.125rem)/1.55 Satoshi,'Helvetica Neue',Arial,sans-serif}.ds-pannello__titolo{margin:0;font-weight:900;font-size:clamp(2.75rem,1.4rem + 5vw,6rem);line-height:.92;letter-spacing:-.04em;text-wrap:balance}.ds-pannello__titolo span{display:block}.ds-pannello__nome{color:var(--titolo)}.ds-scheda{display:grid;gap:1rem;margin:0}.ds-scheda div{display:grid;grid-template-columns:7.5rem 1fr;gap:1rem}.ds-scheda dt{font-weight:700}.ds-scheda dd{margin:0}"
+    },
+    {
+      "name": "Immagine di progetto",
+      "kind": "custom",
+      "refersTo": "pannello-immagine",
+      "description": "Figura con angoli a 1.25rem e didascalia in grigio tenue.",
+      "html": "<figure class=\"ds-figura\"><div class=\"ds-figura__img\"></div><figcaption>La landing page finale</figcaption></figure>",
+      "css": ".ds-figura{margin:0;width:280px}.ds-figura__img{aspect-ratio:3/2;border-radius:1.25rem;background:linear-gradient(135deg,#e13155,#1d1d1b)}.ds-figura figcaption{margin-top:.5rem;font:400 .875rem/1.4 Satoshi,'Helvetica Neue',Arial,sans-serif;color:#57524f}"
+    },
+    {
+      "name": "Stella",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "La stella di Matilde, bordeaux con il bordo sgranato (filtro #sgranato).",
+      "html": "<svg class=\"ds-stella\" viewBox=\"0 0 900 940\" aria-hidden=\"true\"><defs><filter id=\"ds-sgranato\" x=\"-10%\" y=\"-10%\" width=\"120%\" height=\"120%\"><feGaussianBlur in=\"SourceAlpha\" stdDeviation=\"9\" result=\"morbido\"/><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.9\" numOctaves=\"1\" seed=\"4\" result=\"rumore\"/><feComposite in=\"morbido\" in2=\"rumore\" operator=\"arithmetic\" k1=\"0\" k2=\"1.4\" k3=\"0.75\" k4=\"-0.62\" result=\"misto\"/><feComponentTransfer in=\"misto\" result=\"soglia\"><feFuncA type=\"discrete\" tableValues=\"0 1\"/></feComponentTransfer><feFlood flood-color=\"#510000\"/><feComposite in2=\"soglia\" operator=\"in\"/></filter></defs><path filter=\"url(#ds-sgranato)\" d=\"M15 10 Q205 225 245 288 Q330 185 520 48 Q405 300 372 372 Q560 445 885 515 Q565 488 352 497 Q425 705 510 928 Q325 700 208 515 Q100 640 18 695 Q150 505 135 345 Q62 205 15 10 Z\"/></svg>",
+      "css": ".ds-stella{display:block;width:120px;aspect-ratio:900/940;color:#510000}"
+    }
+  ],
+  "narrative": {
+    "northStar": "La lente sulla carta",
+    "overview": "Il sito è una sola schermata: una carta bianca appena calda, la parola PORTFOLIO nera, piena, a tutta larghezza, e sopra di lei sette bolle lucide che viaggiano lente dentro un recinto. Ogni bolla è una lente: dove passa, le lettere sotto diventano liquide; fuori restano nette. Ogni bolla è anche una voce del sito, e si apre in un pannello. L'interfaccia è quasi assente: nome in alto a sinistra, menu verticale a destra, tutto il resto è la scena.\n\nLa densità è bassa e il contrasto è netto: nero pieno su carta, con il colore che arriva solo dai progetti. Ogni progetto porta i suoi due colori dentro la propria bolla, nel pallino del menu e nel titolo del pannello; l'interfaccia non ha un colore suo oltre al nero e al bordeaux della stella. La profondità non viene dalle ombre ma dalla luce: riflessi bianchi sfocati dentro le bolle, e la scena che si sfoca dietro il pannello aperto.\n\nSenza JavaScript il mondo resta leggibile come pagina normale: PORTFOLIO scritto in testo, pannelli come sezioni una sotto l'altra sulla carta.",
+    "keyCharacteristics": [
+      "Una schermata che non scorre; i contenuti stanno nei pannelli che escono dalle bolle.",
+      "Satoshi in quattro pesi (400, 500, 700, 900), con il 900 come voce del mondo.",
+      "Colore solo dai progetti, in coppie sfumate (`--c1` / `--c2`) dichiarate sulla voce.",
+      "Nessuna ombra: lucentezza, sfocatura e trasparenza fanno la profondità.",
+      "La stella di Matilde, bordeaux con il bordo sgranato, come firma ricorrente."
+    ],
+    "rules": [
+      {
+        "name": "The Coppia Rule",
+        "body": "Ogni voce dichiara i suoi due colori come proprietà `--c1` e `--c2` sull'elemento (voce del menu e sezione del pannello), e tutto il resto li legge da lì: bolla, pallino, strato colorato dell'apertura. Un colore di progetto non si scrive mai a mano in un foglio di stile.",
+        "section": "colors"
+      },
+      {
+        "name": "The Titolo Leggibile Rule",
+        "body": "Il nome nel titolo usa `--titolo`, non `--c1`: dove il colore della bolla non regge il contrasto sulla carta (fucsia e arancio), il titolo usa una versione più scura della stessa tinta. Se il secondo colore è già scuro (JU1CE, EnergiaPura, Virtuoso), il titolo usa quello.",
+        "section": "colors"
+      },
+      {
+        "name": "The Interfaccia Nera Rule",
+        "body": "Pulsanti, link, focus e selezione sono neri. Il colore appartiene ai progetti, non ai controlli.",
+        "section": "colors"
+      },
+      {
+        "name": "The Cinque Misure Rule",
+        "body": "Il testo ha cinque misure: piccolo, testo, frase, titolo e PORTFOLIO. Un nuovo elemento ne sceglie una; non se ne aggiunge una sesta.",
+        "section": "typography"
+      },
+      {
+        "name": "The Peso Rule",
+        "body": "La gerarchia si fa con il peso di Satoshi (400, 700, 900) e con la spaziatura negativa sulle misure grandi, non con il colore o con il maiuscolo. Il maiuscolo appartiene solo a PORTFOLIO.",
+        "section": "typography"
+      },
+      {
+        "name": "The Luce Non Ombra Rule",
+        "body": "Nessuna `box-shadow` né `drop-shadow`, a riposo o al passaggio. Per staccare un piano si usa un fondo più chiaro, la sfocatura di ciò che sta dietro, o il riflesso lucido di una bolla.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Lucido Rule",
+        "body": "Una superficie del mondo è lucida se ha il punto bianco in alto a sinistra (al 35% / 30%). Bolle, pallini del menu e strato colorato dell'apertura condividono questa sorgente di luce.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do dichiarare i colori di una nuova voce come `--c1`, `--c2` e `--titolo` sull'elemento, e verificare che `--titolo` regga almeno 4.5:1 sulla Carta Pannello.",
+      "Do usare il nero per ogni controllo e lasciare il colore ai progetti.",
+      "Do dare profondità con il riflesso lucido (luce al 35% / 30%), la sfocatura della scena (10px, opacità 0.45) o il gradino di carta.",
+      "Do aprire ogni nuovo contenuto come pannello uscito dalla sua bolla, con la curva `cubic-bezier(0.76, 0, 0.24, 1)` a 1150ms in apertura e 700ms in chiusura.",
+      "Do scegliere la misura di testo tra le cinque esistenti e gerarchizzare con il peso di Satoshi.",
+      "Do dare a ogni movimento una versione ferma per `prefers-reduced-motion`.",
+      "Do tenere le bolle nel recinto, lontane dai testi della testa e del menu."
+    ],
+    "donts": [
+      "Don't usare `box-shadow` o `drop-shadow` su nessuna superficie.",
+      "Don't trasformare la scena in una pagina a scorrimento con hero, sezioni e griglia di card.",
+      "Don't usare un secondo carattere o un carattere di sistema per i titoli.",
+      "Don't colorare pulsanti, link o focus con i colori dei progetti.",
+      "Don't usare il maiuscolo fuori da PORTFOLIO.",
+      "Don't disegnare bordi intorno a pannelli, immagini o pulsanti: la forma è data dal riempimento e dal ritaglio."
+    ]
+  }
+}
