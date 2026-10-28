@@ -108,17 +108,43 @@ function avvia() {
   quadro.frustumCulled = false;
   scenaSfondo.add(quadro);
 
-  /* ---------- 2. Il vetro: lo shader delle bolle ---------- */
+  /* ---------- REGOLAZIONI: i numeri da cambiare per tarare l'effetto ----------
+     Tutto quello che decide l'aspetto delle bolle e della stella sta qui. */
+  const REGOLA = {
+    stella: {
+      dimensione: 1.35,    // larghezza della stella rispetto al disco della bolla (2 = tutta la bolla)
+      x: -0.28,            // posizione orizzontale sul disco: -1 bordo sinistro, 0 centro, 1 bordo destro
+      y: 0.0,              // posizione verticale: -1 in basso, 1 in alto
+      intensita: 0.6,      // quanto è luminoso il riflesso (0 = invisibile)
+      seguePuntatore: 0.06 // quanto si sposta seguendo il mouse
+    },
+    forma: {
+      deformazioneMin: 0.035, deformazioneMax: 0.085,  // quanto è morbida/irregolare la superficie
+      ovaleMax: 0.22,                                  // quanto può essere ovale o allungata (0 = tutte tonde)
+      velocitaMin: 0.12, velocitaMax: 0.26             // quanto in fretta cambia forma, diverso per ogni bolla
+    },
+    riflessi: {
+      iridescenza: 0.5,    // i colori della pellicola di sapone
+      bordo: 0.75,         // il filo di luce sul profilo, irregolare
+      lampi: 1.0,          // i piccoli punti di luce netti vicino al bordo
+      coloriProgetto: 0.85, // bolle dei progetti: quanto i riflessi prendono i colori della palette
+      coloriAltre: 0.22     // Chi sono e Contatti: solo un velo di colore
+    },
+    rifrazione: 0.13       // quanto la bolla deforma la scritta dietro (0 = per niente)
+  };
+
+  /* ---------- 2. La pellicola: lo shader delle bolle ---------- */
   const giri = stretto() ? 8 : 16;   // quante letture per pixel: meno sul telefono, che è più lento
   const vertice = `
-    uniform float uTempo; uniform float uSeme; uniform float uIrregolare;
-    varying vec3 vNormal; varying vec3 vEye;
+    uniform float uTempo; uniform float uSeme; uniform float uIrregolare; uniform float uVelForma; uniform vec3 uFreq;
+    varying vec3 vNormal; varying vec3 vEye; varying vec3 vPos;
 
-    // la superficie della bolla: una sfera spinta in fuori e in dentro da onde lente
+    // la superficie: una sfera spinta in fuori e in dentro da onde larghe e lente,
+    // con frequenze e velocità diverse per ogni bolla (niente pulsazioni sincronizzate)
     vec3 deforma(vec3 p){
-      float t = uTempo * 0.5;
-      float onda = sin(p.x * 2.1 + t + uSeme) * sin(p.y * 1.8 + t * 1.3 + uSeme * 2.0) * 0.6
-                 + sin(p.z * 2.6 + p.x * 1.2 - t * 0.8 + uSeme * 3.0) * 0.4;
+      float t = uTempo * uVelForma;
+      float onda = sin(p.x * uFreq.x + t + uSeme) * sin(p.y * uFreq.y + t * 0.7 + uSeme * 2.0) * 0.6
+                 + sin(p.z * uFreq.z + p.y * 0.8 - t * 0.5 + uSeme * 3.0) * 0.4;
       return p * (1.0 + onda * uIrregolare);
     }
 
@@ -133,6 +159,7 @@ function avvia() {
       vec3 n = normalize(cross(pa - p, pb - p));
       if (dot(n, n0) < 0.0) n = -n;
 
+      vPos = position;   // il punto sulla bolla, per far "scorrere" i colori della pellicola
       vec4 mondo = modelMatrix * vec4(p, 1.0);
       vec4 vista = viewMatrix * mondo;
       gl_Position = projectionMatrix * vista;
@@ -143,26 +170,35 @@ function avvia() {
     #define GIRI ${giri}
     uniform sampler2D uTexture; uniform sampler2D uStella; uniform vec2 uResolution;
     uniform float uIorR, uIorY, uIorG, uIorC, uIorB, uIorP;
-    uniform float uRefractPower, uChromatic, uSaturation, uShininess, uDiffuseness, uFresnelPower;
-    uniform vec3 uLight; uniform float uBackside; uniform vec3 uTinta;
-    uniform vec2 uSpostaStella; uniform float uForzaStella;
+    uniform float uRefractPower, uChromatic;
+    uniform float uBackside; uniform float uTempo; uniform float uSeme;
+    uniform vec2 uStellaPos; uniform float uStellaDim; uniform float uForzaStella;
     uniform vec3 uColore1; uniform vec3 uColore2; uniform float uForzaColori;
-    varying vec3 vNormal; varying vec3 vEye;
+    uniform float uIridescenza; uniform float uBordo; uniform float uLampi;
+    varying vec3 vNormal; varying vec3 vEye; varying vec3 vPos;
 
-    vec3 saturazione(vec3 c, float a){ float l = dot(c, vec3(0.2125, 0.7154, 0.0721)); return mix(vec3(l), c, a); }
-    float luce(vec3 dir, float lucidita, float diffusa, vec3 n, vec3 occhio){
-      vec3 l = normalize(-dir); vec3 meta = normalize(-occhio + l);
-      return pow(max(dot(n, meta), 0.0), lucidita) + max(0.0, dot(n, l)) * diffusa;
-    }
     vec3 leggi(vec2 uv){ return texture2D(uTexture, uv).rgb; }
+    // un lampo netto e piccolo (niente luce diffusa: è quella che fa sembrare plastica)
+    float lampo(vec3 dir, float nitidezza, vec3 n, vec3 occhio){
+      vec3 l = normalize(-dir); vec3 meta = normalize(-occhio + l);
+      return pow(max(dot(n, meta), 0.0), nitidezza);
+    }
+    // onde morbide che scorrono sulla pellicola: lo spessore del sapone cambia piano
+    float pellicola(vec3 p, float t){
+      return sin(p.x * 3.1 + t + uSeme) * sin(p.y * 2.6 - t * 0.7 + uSeme * 1.3) * 0.5
+           + sin((p.x + p.y * 0.6 + p.z) * 4.7 + t * 0.45 + uSeme * 2.1) * 0.35
+           + sin(p.y * 7.0 - p.z * 5.0 - t * 0.3) * 0.15;
+    }
 
     void main(){
       vec2 uv = gl_FragCoord.xy / uResolution;
       vec3 n = normalize(vNormal);
       if (uBackside > 0.5) n = -n;
       vec3 occhio = normalize(vEye);
-      vec3 colore = vec3(0.0);
+      float dietro = uBackside > 0.5 ? 0.5 : 1.0;   // la faccia posteriore conta la metà
 
+      // 1. quello che c'è dietro, appena deformato e con le frange colorate ai bordi
+      vec3 colore = vec3(0.0);
       for (int i = 0; i < GIRI; i++) {
         float scivola = float(i) / float(GIRI) * 0.045;
         vec3 rR = refract(occhio, n, 1.0 / uIorR);
@@ -180,99 +216,121 @@ function avvia() {
         float b = leggi(uv + rB.xy * (uRefractPower + scivola * 3.0) * uChromatic).z * 0.5;
         vec3 tP = leggi(uv + rP.xy * (uRefractPower + scivola * 1.0) * uChromatic);
         float p = (tP.z * 2.0 + tP.x * 2.0 - tP.y) / 6.0;
-        float R = r + (2.0 * p + 2.0 * y - c) / 3.0;
-        float G = g + (2.0 * y + 2.0 * c - p) / 3.0;
-        float B = b + (2.0 * c + 2.0 * p - y) / 3.0;
-        colore += vec3(R, G, B);
+        colore += vec3(r + (2.0 * p + 2.0 * y - c) / 3.0, g + (2.0 * y + 2.0 * c - p) / 3.0, b + (2.0 * c + 2.0 * p - y) / 3.0);
       }
       colore /= float(GIRI);
-      colore = saturazione(colore, uSaturation);
 
-      float lampi = luce(uLight, uShininess, uDiffuseness, n, occhio)
-                  + 0.25 * luce(vec3(1.0, 1.0, -1.0), uShininess * 0.6, uDiffuseness * 0.5, n, occhio);
-      colore += lampi * (uBackside > 0.5 ? 0.35 : 1.0);
+      // 2. la pellicola di sapone: colori da interferenza, quasi invisibili al centro e vivi verso il bordo
+      float t = uTempo * 0.35;
+      float coseno = abs(dot(occhio, n));            // 1 al centro della bolla, 0 sul profilo
+      float verso = 1.0 - coseno;
+      float onde = pellicola(vPos, t);
+      float onde2 = pellicola(vPos.yzx * 1.3, t * 0.8 + 2.0);
+      float spessore = 0.55 + 0.3 * onde + 0.35 * verso;
+      vec3 iride = 0.5 + 0.5 * cos(6.2831 * (spessore * 2.4 * vec3(1.0, 1.18, 1.42) + vec3(0.0, 0.1, 0.25)));
+      iride = mix(vec3(dot(iride, vec3(0.333))), iride, 0.6);                 // pastello, non arcobaleno
+      // i colori della palette del progetto: si alternano a bande seguendo lo spessore del sapone,
+      // schiariti un po' perché i colori scuri (bordeaux, blu notte) si vedano sul nero
+      vec3 palette = mix(uColore1, uColore2, 0.5 + 0.5 * sin(6.2831 * spessore * 1.6 + onde * 2.0));
+      palette = mix(palette, vec3(1.0), 0.18) * 1.35;
+      iride = mix(iride, palette, uForzaColori);
+      // più la bolla è "di progetto" (uForzaColori alto), più la fascia colorata entra verso il centro
+      float esponente = mix(2.6, 1.5, uForzaColori);
+      float quantoFilm = (0.015 + 0.985 * pow(verso, esponente)) * (0.65 + 0.35 * onde2);   // interno limpido
+      colore += iride * quantoFilm * uIridescenza * (1.0 + uForzaColori * 1.2) * dietro;
 
-      // i riflessi nei colori del progetto: il vetro riflette una "stanza" dipinta
-      // con i suoi due colori, più forte verso i bordi della bolla, come nel vetro vero
-      vec3 riflesso = reflect(occhio, n);
-      vec3 stanza = mix(uColore2, uColore1, smoothstep(-0.6, 0.8, riflesso.y + riflesso.x * 0.3));
-      float versoBordo = pow(1.0 - abs(dot(occhio, n)), 1.6);
-      colore += stanza * (0.0 + versoBordo * 0.55) * uForzaColori * (uBackside > 0.5 ? 0.4 : 1.0);
-      // due lampi colorati, uno per colore del progetto
-      colore += uColore1 * luce(vec3(1.0, -0.7, 1.0), uShininess * 0.4, 0.0, n, occhio) * 0.8 * uForzaColori;
-      colore += uColore2 * luce(vec3(-0.9, -1.0, 0.6), uShininess * 0.3, 0.0, n, occhio) * 0.6 * uForzaColori;
+      // 3. il filo di luce sul profilo: sottile e irregolare, non un anello uniforme
+      float filo = pow(verso, 7.0) * (0.55 + 0.45 * onde);
+      colore += vec3(1.0) * filo * uBordo * dietro;
 
-      // bordo luminoso (Fresnel), appena tinto del colore del progetto
-      float f = pow(1.0 + dot(occhio, n), uFresnelPower);
-      colore = mix(colore, mix(vec3(1.0), uTinta, 0.45), f * (uBackside > 0.5 ? 0.25 : 0.55));
+      // 4. piccoli lampi netti vicino al bordo, come nella foto della bolla
+      float lampi = lampo(vec3(-0.7, 0.9, 1.0), 260.0, n, occhio) * 1.2
+                  + lampo(vec3(0.9, -0.6, 1.0), 320.0, n, occhio) * 0.8
+                  + lampo(vec3(-0.2, -1.0, 0.8), 400.0, n, occhio) * 0.5;
+      colore += vec3(1.0) * lampi * uLampi * dietro;
 
-      // la stella di Matilde riflessa sulla superficie (solo sul lato davanti)
+      // 5. la stella di Matilde: un riflesso bianco-argento sul lato della pellicola.
+      //    n.xy va da -1 a 1 sul disco della bolla: la stella è appoggiata lì,
+      //    così al centro resta fedele e verso il bordo si curva con la bolla.
       if (uBackside < 0.5) {
-        vec3 rifl = reflect(occhio, n);
-        vec2 suv = (rifl.xy - uSpostaStella) * 0.5 + 0.5;
-        suv.y = 1.0 - suv.y;
+        vec2 suv = (n.xy - uStellaPos) / uStellaDim + 0.5;
+        suv += vec2(onde, onde2) * 0.012;                      // la pellicola la fa tremolare appena
         if (suv.x > 0.0 && suv.x < 1.0 && suv.y > 0.0 && suv.y < 1.0) {
-          float stella = texture2D(uStella, suv).a;
-          // sfuma la stella verso i bordi dell'immagine e verso il profilo della sfera,
-          // dove la riflessione si schiaccia: niente ovali puntinati
+          float stella = texture2D(uStella, suv).a;           // la trasparenza del PNG: niente fondo bianco
           float lontanoDalBordo = min(min(suv.x, suv.y), min(1.0 - suv.x, 1.0 - suv.y));
-          stella *= smoothstep(0.0, 0.06, lontanoDalBordo) * smoothstep(0.05, 0.3, abs(dot(occhio, n)));
-          colore += stella * uForzaStella * mix(vec3(1.0), uColore1, 0.25);
+          stella *= smoothstep(0.0, 0.04, lontanoDalBordo);
+          stella *= smoothstep(0.02, 0.25, coseno);          // sparisce dolcemente sul profilo
+          stella *= 0.55 + 0.45 * (0.5 + 0.5 * onde2);         // intensità che varia sulla pellicola
+          vec3 argento = mix(vec3(0.93, 0.94, 0.97), iride, 0.18);
+          colore += argento * stella * uForzaStella;
         }
       }
 
-      colore += vec3(0.004, 0.005, 0.007);
       gl_FragColor = vec4(colore, 1.0);
       #include <colorspace_fragment>
     }`;
 
   // la stella, caricata come texture (finché non arriva, il riflesso è spento)
   const stellaTex = new THREE.TextureLoader().load('assets/img/stella.png', () => {
-    for (const b of bolle) { b.davanti.uniforms.uForzaStella.value = 0.32; }
+    for (const b of bolle) { b.davanti.uniforms.uForzaStella.value = REGOLA.stella.intensita; }
     disegnaSeFermo();
   });
+  stellaTex.colorSpace = THREE.SRGBColorSpace;
 
   const tempoCondiviso = { value: 0 };   // lo stesso orologio per tutte le bolle
   const uniformiBase = () => ({
     uTexture: { value: null }, uStella: { value: stellaTex }, uResolution: { value: new THREE.Vector2() },
     uIorR: { value: 1.15 }, uIorY: { value: 1.16 }, uIorG: { value: 1.18 },
     uIorC: { value: 1.22 }, uIorB: { value: 1.22 }, uIorP: { value: 1.22 },
-    uRefractPower: { value: 0.2 }, uChromatic: { value: 0.5 }, uSaturation: { value: 1.08 },
-    uShininess: { value: 90 }, uDiffuseness: { value: 0.02 }, uFresnelPower: { value: 5.0 },
-    uLight: { value: new THREE.Vector3(-1, 1, 1) }, uBackside: { value: 0 },
-    uTinta: { value: new THREE.Color(1, 1, 1) },
-    uSpostaStella: { value: new THREE.Vector2(-0.04, 0.04) }, uForzaStella: { value: 0 },
-    uColore1: { value: new THREE.Color() }, uColore2: { value: new THREE.Color() }, uForzaColori: { value: 0.45 },
-    uTempo: tempoCondiviso, uSeme: { value: 0 }, uIrregolare: { value: 0.11 },
+    uRefractPower: { value: REGOLA.rifrazione }, uChromatic: { value: 0.45 },
+    uBackside: { value: 0 },
+    uStellaPos: { value: new THREE.Vector2(REGOLA.stella.x, REGOLA.stella.y) },
+    uStellaDim: { value: REGOLA.stella.dimensione }, uForzaStella: { value: 0 },
+    uColore1: { value: new THREE.Color() }, uColore2: { value: new THREE.Color() },
+    uForzaColori: { value: REGOLA.riflessi.coloriAltre },
+    uIridescenza: { value: REGOLA.riflessi.iridescenza }, uBordo: { value: REGOLA.riflessi.bordo },
+    uLampi: { value: REGOLA.riflessi.lampi },
+    uTempo: tempoCondiviso, uSeme: { value: 0 }, uIrregolare: { value: 0.06 },
+    uVelForma: { value: 0.2 }, uFreq: { value: new THREE.Vector3(1.4, 1.2, 1.6) },
   });
 
   /* ---------- 3. Le bolle: una per voce ---------- */
   const forma = new THREE.SphereGeometry(1, 96, 64);
   const scena = new THREE.Scene();
   function casuale(n) { const x = Math.sin(n * 91.7) * 43758.5; return x - Math.floor(x); }
+  const tra = (min, max, k) => min + (max - min) * k;
 
   const bolle = voci.map((v, i) => {
     const davanti = new THREE.ShaderMaterial({ uniforms: uniformiBase(), vertexShader: vertice, fragmentShader: frammento, side: THREE.FrontSide });
     const dietro = new THREE.ShaderMaterial({ uniforms: uniformiBase(), vertexShader: vertice, fragmentShader: frammento, side: THREE.BackSide });
     dietro.uniforms.uBackside.value = 1;
-    dietro.uniforms.uRefractPower.value = 0.14;
-    // la tinta del progetto, spenta: mescolata con il grigio
-    const tinta = new THREE.Color(v.colore).lerp(new THREE.Color(0.7, 0.7, 0.7), 0.55);
-    davanti.uniforms.uTinta.value = tinta;
-    dietro.uniforms.uTinta.value = tinta;
-    // i due colori del progetto per i riflessi, e un "seme" perché ogni bolla abbia la sua forma
+    dietro.uniforms.uRefractPower.value = REGOLA.rifrazione * 0.7;
+    // ogni bolla ha la sua forma: quanto è irregolare, a che ritmo cambia, con che onde
+    const F = REGOLA.forma;
     for (const m of [davanti, dietro]) {
       m.uniforms.uSeme.value = i * 1.7 + 0.4;
+      m.uniforms.uIrregolare.value = tra(F.deformazioneMin, F.deformazioneMax, casuale(i + 41));
+      m.uniforms.uVelForma.value = tra(F.velocitaMin, F.velocitaMax, casuale(i + 83));
+      m.uniforms.uFreq.value.set(tra(0.9, 1.7, casuale(i + 43)), tra(0.8, 1.6, casuale(i + 47)), tra(1.0, 1.8, casuale(i + 53)));
       m.uniforms.uColore1.value.set(v.colore);
       m.uniforms.uColore2.value.set(v.colore2);
+      // le prime cinque voci sono i progetti: i loro riflessi hanno la palette piena
+      m.uniforms.uForzaColori.value = i < 5 ? REGOLA.riflessi.coloriProgetto : REGOLA.riflessi.coloriAltre;
     }
     const sfera = new THREE.Mesh(forma, davanti);
     sfera.userData.voce = v;
     scena.add(sfera);
+    // alcune quasi tonde, altre ovali o allungate: dipende da "ovaleMax"
+    const ovale = casuale(i + 61) * F.ovaleMax;
+    const largo = casuale(i + 67) > 0.5;
     return {
       voce: v, sfera, davanti, dietro,
       dimensione: (i < 5 ? 1.35 + casuale(i) * 0.35 : 0.8),   // le bolle dei progetti sono le più grandi
       fase: casuale(i + 7) * Math.PI * 2,
+      ritmo: tra(0.0005, 0.0011, casuale(i + 89)),            // ogni bolla "respira" a un ritmo suo
+      sx: largo ? 1 + ovale : 1 - ovale * 0.5,
+      sy: largo ? 1 - ovale * 0.5 : 1 + ovale,
+      giro: (casuale(i + 71) - 0.5) * 0.9,                    // leggermente inclinata
       x: 0, y: 0, vx: 0, vy: 0, scala: 1, scalaObiettivo: 1,
     };
   });
@@ -358,9 +416,11 @@ function avvia() {
   function disegna() {
     if (!menoMovimento) tempoCondiviso.value = performance.now() / 1000;
     for (const b of bolle) {
-      const respiro = menoMovimento ? 0 : Math.sin(performance.now() * 0.0009 + b.fase) * 0.03;
+      const respiro = menoMovimento ? 0 : Math.sin(performance.now() * b.ritmo + b.fase) * 0.025;
       b.sfera.position.set(b.x, b.y, b.voce.indice * 0.02);
-      b.sfera.scale.set(b.raggio * b.scala * (1 + respiro), b.raggio * b.scala * (1 - respiro), b.raggio * b.scala);
+      const r = b.raggio * b.scala;
+      b.sfera.scale.set(r * b.sx * (1 + respiro), r * b.sy * (1 - respiro), r);
+      b.sfera.rotation.z = b.giro;
     }
     // 1. sfondo nel foglio "dietro"
     motore.setRenderTarget(foglioDietro);
@@ -409,7 +469,7 @@ function avvia() {
           if (!a.sfera.visible || !c.sfera.visible || fermo) continue;
           const dx = c.x - a.x, dy = c.y - a.y;
           const distanza = Math.hypot(dx, dy) || 0.001;
-          const minima = (a.raggio * a.scala + c.raggio * c.scala) * 0.78;
+          const minima = (a.raggio * a.scala * (a.sx + a.sy) / 2 + c.raggio * c.scala * (c.sx + c.sy) / 2) * 0.78;
           if (distanza < minima) {
             const spinta = ((minima - distanza) / minima) * 2.2 * dt;
             const ux = dx / distanza, uy = dy / distanza;
@@ -463,7 +523,8 @@ function avvia() {
   window.addEventListener('pointermove', (e) => {
     // la stella riflessa segue il puntatore: si muove sulla superficie delle bolle
     for (const b of bolle) {
-        b.davanti.uniforms.uSpostaStella.value.set(-0.04 + (e.clientX / L - 0.5) * 0.12, 0.04 - (e.clientY / A - 0.5) * 0.12);
+        const k = REGOLA.stella.seguePuntatore;
+        b.davanti.uniforms.uStellaPos.value.set(REGOLA.stella.x - (e.clientX / L - 0.5) * k, REGOLA.stella.y + (e.clientY / A - 0.5) * k);
     }
     if (e.target === canvas) evidenzia(bollaSotto(e.clientX, e.clientY));
     else if (sopra && !sopra.daMenu) evidenzia(null);
