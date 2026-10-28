@@ -171,7 +171,8 @@
   align-content: start;
 }
 .pannello__immagini .largo { grid-column: 1 / -1; }
-.pannello__immagini img { width: 100%; border-radius: 1.25rem; }
+.pannello__immagini img,
+.pannello__video { width: 100%; height: auto; border-radius: 1.25rem; background: #000; }
 .pannello__immagini figcaption { margin-top: 0.5rem; font-size: var(--t-piccolo); color: var(--tenue); }
 
 .pannello__dopo { grid-column: 1 / -1; font-weight: 700; font-size: var(--t-frase); }

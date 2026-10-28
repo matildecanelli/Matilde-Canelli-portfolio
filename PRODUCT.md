@@ -39,7 +39,7 @@ Design e sviluppo **alla pari**: Matilde progetta l'identità visiva e scrive il
 - Pagine leggere, immagini ottimizzate (WebP o JPG compressi, `loading="lazy"`).
 - SEO di base: title, meta description, immagine Open Graph.
 - Animazioni libere purché non rallentino lettura e caricamento e rispettino `prefers-reduced-motion`.
-- **Aperti:** i link di Imaze ed EnergiaPura cambieranno (repository da rinominare): Matilde fornirà i nuovi indirizzi.
+- **Aperti:** il link di Imaze cambierà (repository da rinominare): Matilde fornirà il nuovo indirizzo. Il video di EnergiaPura ora è dentro il sito (`assets/video/energiapura.mp4`), quindi il vecchio sito del video non serve più.
 - Le locandine JU1CE contengono il refuso "THRISTY": è una scelta di Matilde tenerlo, non correggerlo e non segnalarlo come errore.
 
 ## Brand Commitments
