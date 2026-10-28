@@ -24,6 +24,7 @@ const voci = [...document.querySelectorAll('[data-voce]')].map((a, i) => ({
   id: a.dataset.voce,
   nome: a.textContent.trim(),
   colore: getComputedStyle(a).getPropertyValue('--c1').trim(),
+  colore2: getComputedStyle(a).getPropertyValue('--c2').trim(),
   menu: a,
   indice: i,
 }));
@@ -125,6 +126,7 @@ function avvia() {
     uniform float uRefractPower, uChromatic, uSaturation, uShininess, uDiffuseness, uFresnelPower;
     uniform vec3 uLight; uniform float uBackside; uniform vec3 uTinta;
     uniform vec2 uSpostaStella; uniform float uForzaStella;
+    uniform vec3 uColore1; uniform vec3 uColore2; uniform float uForzaColori;
     varying vec3 vNormal; varying vec3 vEye;
 
     vec3 saturazione(vec3 c, float a){ float l = dot(c, vec3(0.2125, 0.7154, 0.0721)); return mix(vec3(l), c, a); }
@@ -170,6 +172,16 @@ function avvia() {
                   + 0.6 * luce(vec3(1.0, 1.0, -1.0), uShininess * 0.6, uDiffuseness * 0.5, n, occhio);
       colore += lampi * (uBackside > 0.5 ? 0.35 : 1.0);
 
+      // i riflessi nei colori del progetto: il vetro riflette una "stanza" dipinta
+      // con i suoi due colori, più forte verso i bordi della bolla, come nel vetro vero
+      vec3 riflesso = reflect(occhio, n);
+      vec3 stanza = mix(uColore2, uColore1, smoothstep(-0.6, 0.8, riflesso.y + riflesso.x * 0.3));
+      float versoBordo = pow(1.0 - abs(dot(occhio, n)), 1.6);
+      colore += stanza * (0.06 + versoBordo * 0.6) * uForzaColori * (uBackside > 0.5 ? 0.4 : 1.0);
+      // due lampi colorati, uno per colore del progetto
+      colore += uColore1 * luce(vec3(1.0, -0.7, 1.0), uShininess * 0.4, 0.0, n, occhio) * 0.8 * uForzaColori;
+      colore += uColore2 * luce(vec3(-0.9, -1.0, 0.6), uShininess * 0.3, 0.0, n, occhio) * 0.6 * uForzaColori;
+
       // bordo luminoso (Fresnel), appena tinto del colore del progetto
       float f = pow(1.0 + dot(occhio, n), uFresnelPower);
       colore = mix(colore, mix(vec3(1.0), uTinta, 0.45), f * (uBackside > 0.5 ? 0.25 : 0.55));
@@ -177,11 +189,15 @@ function avvia() {
       // la stella di Matilde riflessa sulla superficie (solo sul lato davanti)
       if (uBackside < 0.5) {
         vec3 rifl = reflect(occhio, n);
-        vec2 suv = (rifl.xy - uSpostaStella) * 1.7 + 0.5;
+        vec2 suv = (rifl.xy - uSpostaStella) * 0.62 + 0.5;
         suv.y = 1.0 - suv.y;
         if (suv.x > 0.0 && suv.x < 1.0 && suv.y > 0.0 && suv.y < 1.0) {
           float stella = texture2D(uStella, suv).a;
-          colore += stella * uForzaStella * vec3(1.0, 0.82, 0.82);
+          // sfuma la stella verso i bordi dell'immagine e verso il profilo della sfera,
+          // dove la riflessione si schiaccia: niente ovali puntinati
+          float lontanoDalBordo = min(min(suv.x, suv.y), min(1.0 - suv.x, 1.0 - suv.y));
+          stella *= smoothstep(0.0, 0.1, lontanoDalBordo) * smoothstep(0.2, 0.55, abs(dot(occhio, n)));
+          colore += stella * uForzaStella * mix(vec3(1.0), uColore1, 0.25);
         }
       }
 
@@ -192,7 +208,7 @@ function avvia() {
 
   // la stella, caricata come texture (finché non arriva, il riflesso è spento)
   const stellaTex = new THREE.TextureLoader().load('assets/img/stella.png', () => {
-    for (const b of bolle) { b.davanti.uniforms.uForzaStella.value = 0.9; }
+    for (const b of bolle) { b.davanti.uniforms.uForzaStella.value = 0.4; }
     disegnaSeFermo();
   });
 
@@ -204,7 +220,8 @@ function avvia() {
     uShininess: { value: 90 }, uDiffuseness: { value: 0.02 }, uFresnelPower: { value: 5.0 },
     uLight: { value: new THREE.Vector3(-1, 1, 1) }, uBackside: { value: 0 },
     uTinta: { value: new THREE.Color(1, 1, 1) },
-    uSpostaStella: { value: new THREE.Vector2(-0.38, 0.4) }, uForzaStella: { value: 0 },
+    uSpostaStella: { value: new THREE.Vector2(-0.12, 0.14) }, uForzaStella: { value: 0 },
+    uColore1: { value: new THREE.Color() }, uColore2: { value: new THREE.Color() }, uForzaColori: { value: 0.8 },
   });
 
   /* ---------- 3. Le bolle: una per voce ---------- */
@@ -221,16 +238,56 @@ function avvia() {
     const tinta = new THREE.Color(v.colore).lerp(new THREE.Color(0.7, 0.7, 0.7), 0.55);
     davanti.uniforms.uTinta.value = tinta;
     dietro.uniforms.uTinta.value = tinta;
+    // i due colori del progetto per i riflessi
+    for (const m of [davanti, dietro]) {
+      m.uniforms.uColore1.value.set(v.colore);
+      m.uniforms.uColore2.value.set(v.colore2);
+    }
     const sfera = new THREE.Mesh(forma, davanti);
     sfera.userData.voce = v;
     scena.add(sfera);
     return {
       voce: v, sfera, davanti, dietro,
-      dimensione: (i < 5 ? 0.85 + casuale(i) * 0.4 : 0.72),
+      dimensione: (i < 5 ? 1.35 + casuale(i) * 0.35 : 0.8),   // le bolle dei progetti sono le più grandi
       fase: casuale(i + 7) * Math.PI * 2,
       x: 0, y: 0, vx: 0, vy: 0, scala: 1, scalaObiettivo: 1,
     };
   });
+
+  /* ---------- Lo scoppio: la bolla si rompe in goccioline di vetro ---------- */
+  const gocce = [];                       // { mesh, vx, vy, misura, vita }
+  const gruppoGocce = new THREE.Group();
+  scena.add(gruppoGocce);
+  const DURATA_GOCCE = 0.65;              // secondi
+
+  function scoppia(b) {
+    const r0 = b.raggio * b.scala;
+    b.sfera.visible = false;
+    for (let k = 0; k < 26; k++) {
+      const angolo = (k / 26) * Math.PI * 2 + Math.random() * 0.3;
+      const goccia = new THREE.Mesh(forma, b.davanti);   // lo stesso vetro della bolla
+      const misura = r0 * (0.04 + Math.random() * 0.07);
+      goccia.position.set(b.x + Math.cos(angolo) * r0 * 0.92, b.y + Math.sin(angolo) * r0 * 0.92, b.sfera.position.z);
+      const spinta = r0 * (2.2 + Math.random() * 2.6);
+      gocce.push({ mesh: goccia, vx: Math.cos(angolo) * spinta, vy: Math.sin(angolo) * spinta, misura, vita: 0 });
+      gruppoGocce.add(goccia);
+    }
+  }
+
+  function muoviGocce(dt) {
+    for (let i = gocce.length - 1; i >= 0; i--) {
+      const g = gocce[i];
+      g.vita += dt;
+      const frenata = Math.pow(0.9, dt * 60);
+      g.vx *= frenata;
+      g.vy = g.vy * frenata - altezzaVista * 0.6 * dt;   // un po' di gravità
+      g.mesh.position.x += g.vx * dt;
+      g.mesh.position.y += g.vy * dt;
+      const resta = Math.max(0, 1 - g.vita / DURATA_GOCCE);
+      g.mesh.scale.setScalar(g.misura * resta);
+      if (g.vita >= DURATA_GOCCE) { gruppoGocce.remove(g.mesh); gocce.splice(i, 1); }
+    }
+  }
 
   /* ---------- 4. Due "fogli" su cui disegnare prima dello schermo ---------- */
   const fogli = [0, 1].map(() => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType }));
@@ -258,7 +315,7 @@ function avvia() {
     disegnaScritta(L, A, dpr);
 
     // grandezza delle bolle: in pixel sullo schermo, poi tradotta in unità della scena
-    const base = Math.min(L, A) * (stretto() ? 0.2 : 0.14);
+    const base = Math.min(L, A) * (stretto() ? 0.15 : 0.14);
     bolle.forEach((b) => { b.raggio = (base * b.dimensione / A) * altezzaVista; });
   }
 
@@ -287,8 +344,10 @@ function avvia() {
     motore.setRenderTarget(foglioDavanti);
     motore.render(scenaSfondo, camera);
     for (const b of bolle) b.sfera.material = b.dietro;
+    gruppoGocce.visible = false;
     motore.autoClear = false;
     motore.render(scena, camera);
+    gruppoGocce.visible = true;
     motore.autoClear = true;
     // 3. sullo schermo: sfondo + fronte delle bolle, che leggono il foglio "davanti"
     motore.setRenderTarget(null);
@@ -306,8 +365,9 @@ function avvia() {
   function passo(adesso) {
     const dt = Math.min((adesso - ultimo) / 1000, 0.05);
     ultimo = adesso;
-    if (!fermo) {
-      for (const b of bolle) {
+    if (!fermo || gocce.length) {
+      if (gocce.length) muoviGocce(dt);
+      for (const b of (fermo ? [] : bolle)) {
         b.x += b.vx * dt;
         b.y += b.vy * dt;
         const r = b.raggio * 0.35;   // il centro resta sullo schermo, la bolla può uscire un po'
@@ -333,7 +393,7 @@ function avvia() {
   function bollaSotto(x, y) {
     puntatore.set((x / L) * 2 - 1, -(y / A) * 2 + 1);
     raggio.setFromCamera(puntatore, camera);
-    const colpita = raggio.intersectObjects(bolle.map((b) => b.sfera))[0];
+    const colpita = raggio.intersectObjects(bolle.filter((b) => b.sfera.visible).map((b) => b.sfera))[0];
     return colpita ? bolle.find((b) => b.sfera === colpita.object) : null;
   }
   function evidenzia(b) {
@@ -356,7 +416,7 @@ function avvia() {
   window.addEventListener('pointermove', (e) => {
     // la stella riflessa segue il puntatore: si muove sulla superficie delle bolle
     for (const b of bolle) {
-      b.davanti.uniforms.uSpostaStella.value.set(-0.38 + (e.clientX / L - 0.5) * 0.35, 0.4 - (e.clientY / A - 0.5) * 0.35);
+        b.davanti.uniforms.uSpostaStella.value.set(-0.12 + (e.clientX / L - 0.5) * 0.25, 0.14 - (e.clientY / A - 0.5) * 0.25);
     }
     if (e.target === canvas) evidenzia(bollaSotto(e.clientX, e.clientY));
     else if (sopra && !sopra.daMenu) evidenzia(null);
@@ -401,5 +461,20 @@ function avvia() {
     },
     ferma() { fermo = true; evidenzia(null); },
     riparti() { fermo = false; ultimo = performance.now(); },
+    // la bolla si gonfia per un attimo e poi scoppia; la promessa si risolve allo scoppio
+    scoppia(id) {
+      const b = bolle.find((x) => x.voce.id === id);
+      if (!b || menoMovimento || !b.sfera.visible) return Promise.resolve();
+      b.scalaObiettivo = 1.22;
+      return new Promise((fatto) => setTimeout(() => { scoppia(b); fatto(); }, 160));
+    },
+    // dopo la chiusura del pannello la bolla rinasce, piccola, e si gonfia
+    riforma(id) {
+      const b = bolle.find((x) => x.voce.id === id);
+      if (!b || b.sfera.visible) return;
+      b.sfera.visible = true;
+      b.scala = 0.05;
+      b.scalaObiettivo = 1;
+    },
   };
 }

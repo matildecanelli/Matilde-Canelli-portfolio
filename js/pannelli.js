@@ -37,8 +37,13 @@
     if (aperto) chiudi(aperto, { senzaAnimazione: true });
     aperto = pannello;
     ultimoAttivatore = document.activeElement;
+    // prima la bolla scoppia, poi dal punto dello scoppio si apre il pannello
+    const scoppio = window.palco ? window.palco.scoppia(pannello.id) : Promise.resolve();
     window.palco && window.palco.ferma();
+    scoppio.then(() => { if (aperto === pannello) mostra(pannello); });
+  }
 
+  function mostra(pannello) {
     pannello.classList.add('e-aperto');
     pannello.setAttribute('role', 'dialog');
     pannello.setAttribute('aria-modal', 'true');
@@ -85,7 +90,7 @@
       pannello.getAnimations().forEach((a) => a.cancel());
       pannello.style.clipPath = '';
       palco.inert = false;
-      window.palco && window.palco.riparti();
+      if (window.palco) { window.palco.riparti(); window.palco.riforma(pannello.id); }
       if (ultimoAttivatore && document.contains(ultimoAttivatore)) ultimoAttivatore.focus({ preventScroll: true });
     };
     if (aperto === pannello) aperto = null;
