@@ -111,15 +111,14 @@ function avvia() {
   /* ---------- 2. Il vetro: lo shader delle bolle ---------- */
   const giri = stretto() ? 8 : 16;   // quante letture per pixel: meno sul telefono, che è più lento
   const vertice = `
-    uniform float uTempo; uniform float uSeme; uniform float uIrregolare; uniform vec3 uFreq;
+    uniform float uTempo; uniform float uSeme; uniform float uIrregolare;
     varying vec3 vNormal; varying vec3 vEye;
 
     // la superficie della bolla: una sfera spinta in fuori e in dentro da onde lente
     vec3 deforma(vec3 p){
       float t = uTempo * 0.5;
-      // ogni bolla ha le sue frequenze (uFreq): lobi, "fagioli", gocce allungate
-      float onda = sin(p.x * uFreq.x + t + uSeme) * sin(p.y * uFreq.y + t * 1.3 + uSeme * 2.0) * 0.6
-                 + sin(p.z * uFreq.z + p.x * 1.2 - t * 0.8 + uSeme * 3.0) * 0.4;
+      float onda = sin(p.x * 2.1 + t + uSeme) * sin(p.y * 1.8 + t * 1.3 + uSeme * 2.0) * 0.6
+                 + sin(p.z * 2.6 + p.x * 1.2 - t * 0.8 + uSeme * 3.0) * 0.4;
       return p * (1.0 + onda * uIrregolare);
     }
 
@@ -209,16 +208,16 @@ function avvia() {
 
       // la stella di Matilde riflessa sulla superficie (solo sul lato davanti)
       if (uBackside < 0.5) {
-        // n.xy va da -1 a 1 sul disco della bolla: la stella è "dipinta" su quel disco,
-        // spostata verso il bordo. Al centro resta fedele, verso il bordo si curva come sul vetro.
-        vec2 suv = (n.xy - uSpostaStella) / 1.7 + 0.5;   // la texture ha già l'alto in alto: niente capovolgimento
+        vec3 rifl = reflect(occhio, n);
+        vec2 suv = (rifl.xy - uSpostaStella) * 0.5 + 0.5;
+        suv.y = 1.0 - suv.y;
         if (suv.x > 0.0 && suv.x < 1.0 && suv.y > 0.0 && suv.y < 1.0) {
           float stella = texture2D(uStella, suv).a;
           // sfuma la stella verso i bordi dell'immagine e verso il profilo della sfera,
           // dove la riflessione si schiaccia: niente ovali puntinati
           float lontanoDalBordo = min(min(suv.x, suv.y), min(1.0 - suv.x, 1.0 - suv.y));
-          stella *= smoothstep(0.0, 0.04, lontanoDalBordo) * smoothstep(0.02, 0.18, abs(dot(occhio, n)));
-          colore += stella * uForzaStella * mix(vec3(1.0), uColore1, 0.15);
+          stella *= smoothstep(0.0, 0.06, lontanoDalBordo) * smoothstep(0.05, 0.3, abs(dot(occhio, n)));
+          colore += stella * uForzaStella * mix(vec3(1.0), uColore1, 0.25);
         }
       }
 
@@ -229,7 +228,7 @@ function avvia() {
 
   // la stella, caricata come texture (finché non arriva, il riflesso è spento)
   const stellaTex = new THREE.TextureLoader().load('assets/img/stella.png', () => {
-    for (const b of bolle) { b.davanti.uniforms.uForzaStella.value = 0.55; }
+    for (const b of bolle) { b.davanti.uniforms.uForzaStella.value = 0.32; }
     disegnaSeFermo();
   });
 
@@ -242,9 +241,9 @@ function avvia() {
     uShininess: { value: 90 }, uDiffuseness: { value: 0.02 }, uFresnelPower: { value: 5.0 },
     uLight: { value: new THREE.Vector3(-1, 1, 1) }, uBackside: { value: 0 },
     uTinta: { value: new THREE.Color(1, 1, 1) },
-    uSpostaStella: { value: new THREE.Vector2(0.28, 0.24) }, uForzaStella: { value: 0 },
+    uSpostaStella: { value: new THREE.Vector2(-0.04, 0.04) }, uForzaStella: { value: 0 },
     uColore1: { value: new THREE.Color() }, uColore2: { value: new THREE.Color() }, uForzaColori: { value: 0.45 },
-    uTempo: tempoCondiviso, uSeme: { value: 0 }, uIrregolare: { value: 0.11 }, uFreq: { value: new THREE.Vector3(2.1, 1.8, 2.6) },
+    uTempo: tempoCondiviso, uSeme: { value: 0 }, uIrregolare: { value: 0.11 },
   });
 
   /* ---------- 3. Le bolle: una per voce ---------- */
@@ -264,8 +263,6 @@ function avvia() {
     // i due colori del progetto per i riflessi, e un "seme" perché ogni bolla abbia la sua forma
     for (const m of [davanti, dietro]) {
       m.uniforms.uSeme.value = i * 1.7 + 0.4;
-      m.uniforms.uIrregolare.value = 0.16 + casuale(i + 41) * 0.14;
-      m.uniforms.uFreq.value.set(1.1 + casuale(i + 43) * 1.6, 0.9 + casuale(i + 47) * 1.7, 1.3 + casuale(i + 53) * 1.4);
       m.uniforms.uColore1.value.set(v.colore);
       m.uniforms.uColore2.value.set(v.colore2);
     }
@@ -276,10 +273,6 @@ function avvia() {
       voce: v, sfera, davanti, dietro,
       dimensione: (i < 5 ? 1.35 + casuale(i) * 0.35 : 0.8),   // le bolle dei progetti sono le più grandi
       fase: casuale(i + 7) * Math.PI * 2,
-      sx: 0.8 + casuale(i + 61) * 0.55,          // quanto è larga rispetto all'altezza
-      sy: 0.8 + casuale(i + 67) * 0.4,
-      giro: casuale(i + 71) * Math.PI,            // inclinazione
-      velGiro: (casuale(i + 73) - 0.5) * 0.12,   // gira piano, in radianti al secondo
       x: 0, y: 0, vx: 0, vy: 0, scala: 1, scalaObiettivo: 1,
     };
   });
@@ -367,8 +360,7 @@ function avvia() {
     for (const b of bolle) {
       const respiro = menoMovimento ? 0 : Math.sin(performance.now() * 0.0009 + b.fase) * 0.03;
       b.sfera.position.set(b.x, b.y, b.voce.indice * 0.02);
-      b.sfera.scale.set(b.raggio * b.scala * b.sx * (1 + respiro), b.raggio * b.scala * b.sy * (1 - respiro), b.raggio * b.scala);
-      b.sfera.rotation.z = b.giro;
+      b.sfera.scale.set(b.raggio * b.scala * (1 + respiro), b.raggio * b.scala * (1 - respiro), b.raggio * b.scala);
     }
     // 1. sfondo nel foglio "dietro"
     motore.setRenderTarget(foglioDietro);
@@ -409,7 +401,6 @@ function avvia() {
         if (b.x < -limX || b.x > limX) { b.vx *= -1; b.x = THREE.MathUtils.clamp(b.x, -limX, limX); }
         if (b.y < -limY || b.y > limY) { b.vy *= -1; b.y = THREE.MathUtils.clamp(b.y, -limY, limY); }
         b.scala += (b.scalaObiettivo - b.scala) * Math.min(1, dt * 8);
-        b.giro += b.velGiro * dt;
       }
       // le bolle si sfiorano e si intersecano un po', poi si respingono: mai un unico blocco
       for (let i = 0; i < bolle.length; i++) {
@@ -418,7 +409,7 @@ function avvia() {
           if (!a.sfera.visible || !c.sfera.visible || fermo) continue;
           const dx = c.x - a.x, dy = c.y - a.y;
           const distanza = Math.hypot(dx, dy) || 0.001;
-          const minima = (a.raggio * a.scala * (a.sx + a.sy) / 2 + c.raggio * c.scala * (c.sx + c.sy) / 2) * 0.78;
+          const minima = (a.raggio * a.scala + c.raggio * c.scala) * 0.78;
           if (distanza < minima) {
             const spinta = ((minima - distanza) / minima) * 2.2 * dt;
             const ux = dx / distanza, uy = dy / distanza;
@@ -472,7 +463,7 @@ function avvia() {
   window.addEventListener('pointermove', (e) => {
     // la stella riflessa segue il puntatore: si muove sulla superficie delle bolle
     for (const b of bolle) {
-        b.davanti.uniforms.uSpostaStella.value.set(0.28 - (e.clientX / L - 0.5) * 0.1, 0.24 + (e.clientY / A - 0.5) * 0.1);
+        b.davanti.uniforms.uSpostaStella.value.set(-0.04 + (e.clientX / L - 0.5) * 0.12, 0.04 - (e.clientY / A - 0.5) * 0.12);
     }
     if (e.target === canvas) evidenzia(bollaSotto(e.clientX, e.clientY));
     else if (sopra && !sopra.daMenu) evidenzia(null);
