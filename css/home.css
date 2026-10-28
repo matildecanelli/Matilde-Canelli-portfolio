@@ -1,88 +1,105 @@
 /* ==========================================================================
-   home.css: la scena con le bolle e i pannelli che si aprono
+   home.css: la scena con le particelle e i pannelli che si aprono
    ========================================================================== */
 
 /* ---------- La scena ----------
-   Con JavaScript è una sola schermata: tutto il resto sta nei pannelli. */
+   Con JavaScript è una sola schermata nera: tutto il resto sta nei pannelli. */
 .palco {
   position: relative;
   min-height: 100svh;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto 1fr;
   padding: var(--margine);
 }
-.js body { overflow: hidden; }   /* la pagina non scorre: si aprono le bolle */
+.js body { overflow: hidden; }   /* la pagina non scorre: si aprono le particelle */
 .js .palco { height: 100svh; }
 
-/* L'SVG con PORTFOLIO e le bolle copre tutta la scena */
+/* Il canvas 3D con PORTFOLIO e le bolle di vetro copre tutta la scena */
 .palco__scena { display: none; }
 .js .palco__scena {
   display: block;
   position: absolute; inset: 0;
   width: 100%; height: 100%;
+  touch-action: pan-y;
 }
-.palco__scena a { cursor: pointer; }
-.palco__scena .etichetta {
-  font: 700 14px var(--font);
-  fill: var(--nero);
+.palco__scena.e-sopra-bolla { cursor: pointer; }
+/* Il nome della bolla, che compare al centro quando ci passi sopra */
+.palco__etichetta {
+  position: absolute; z-index: 2; left: 0; top: 0;
+  font-size: 0.8125rem; font-weight: 500; letter-spacing: 0.02em;
+  color: var(--chiaro);
+  transform: translate(-50%, -50%);
   opacity: 0;
-  transition: opacity 200ms ease;
+  transition: opacity 250ms ease;
   pointer-events: none;
 }
-.palco__scena a:hover .etichetta,
-.palco__scena .e-evidenza .etichetta { opacity: 1; }
+.palco__etichetta.e-visibile { opacity: 1; }
+/* Senza WebGL: niente canvas, la parola scritta normalmente */
+.senza-webgl .palco__scena { display: none; }
 
-/* Senza JavaScript: la parola scritta normalmente */
-.palco__titolo { grid-column: 1 / -1; align-self: center; }
+/* Senza JavaScript: la parola scritta normalmente, al centro */
+.palco__titolo { min-height: 60svh; display: grid; place-items: center; }
 .palco__riserva {
   display: block;
-  font-weight: 900; font-size: 19vw; line-height: 0.85; letter-spacing: -0.05em;
-  text-transform: uppercase;
+  font-family: "Anton", Impact, sans-serif; font-weight: 400;
+  font-size: 18vw; line-height: 0.9; letter-spacing: 0.01em;
+  text-transform: uppercase; color: #e9e9e9;
 }
+.js .palco__titolo { min-height: 0; }
 .js .palco__riserva { display: none; }
+.js.senza-webgl .palco__titolo { position: absolute; inset: 0; display: grid; place-items: center; }
+.js.senza-webgl .palco__riserva { display: block; }
 
-/* In alto a sinistra: chi è e il CV */
+/* In alto a sinistra: chi è. In alto a destra: il CV */
 .testa {
-  position: relative; z-index: 2;
-  display: flex; align-items: flex-start; gap: 0.9rem;
-  font-size: var(--t-piccolo);
-  line-height: 1.4;
-  pointer-events: none;           /* le bolle ci passano sotto senza bloccare */
+  position: absolute; z-index: 2;
+  top: var(--margine); left: var(--margine);
+  display: flex; align-items: flex-start; gap: 0.8rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--tenue);
 }
-.testa a { pointer-events: auto; }
-.testa__stella { width: 2.6rem; aspect-ratio: 900 / 940; flex: none; margin-top: -0.2rem; }
-.testa__chi strong { font-weight: 900; }
-.testa__cv { font-weight: 700; margin-left: clamp(0.5rem, 3vw, 2.5rem); white-space: nowrap; }
+.testa__stella { width: 2.4rem; height: auto; flex: none; margin-top: -0.2rem; }
+.testa__chi strong { font-weight: 700; color: var(--chiaro); }
+.palco__cv {
+  position: absolute; z-index: 2;
+  top: var(--margine); right: var(--margine);
+  font-size: 0.8125rem; font-weight: 500;
+  padding-block: 0.6rem; margin-top: -0.6rem;
+}
 
-/* A destra: il menu */
-.menu { position: relative; z-index: 2; grid-column: 2; grid-row: 1 / 3; }
+/* Il menu: piccolo, a destra, centrato sull'altezza dello schermo */
+.menu {
+  position: absolute; z-index: 2;
+  right: var(--margine); top: 50%;
+  transform: translateY(-50%);
+}
 .menu ul { display: grid; gap: 0.15rem; justify-items: end; }
 .menu a {
-  display: inline-flex; align-items: center; gap: 0.6rem;
-  padding: 0.35rem 0;
-  font-size: var(--t-frase);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  display: inline-block;
+  padding: 0.4rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   text-decoration: none;
+  color: var(--tenue);
+  transition: color 200ms ease, transform 300ms var(--ease);
 }
-.menu a .pallino { transition: transform 300ms var(--ease); }
-.menu a:hover .pallino,
-.menu a:focus-visible .pallino { transform: scale(1.5); }
-.menu__stacco { margin-top: 1rem; }
+.menu a:hover,
+.menu a:focus-visible { color: var(--chiaro); transform: translateX(-0.3rem); }
+.menu .pallino { display: none; }
+.menu__stacco { margin-top: 0.9rem; }
 
+/* Telefono: il menu va in basso, centrato, su più righe */
 @media (max-width: 40rem) {
-  .palco { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
-  .menu { grid-column: 1; grid-row: 3; }
-  .menu ul { display: flex; flex-wrap: wrap; gap: 0.1rem 1rem; justify-items: start; }
-  .menu a { font-size: 1.0625rem; min-height: 2.75rem; }
+  .menu { top: auto; bottom: var(--margine); left: var(--margine); transform: none; }
+  .menu ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 1.1rem; }
+  .menu a { min-height: 2.75rem; display: inline-flex; align-items: center; }
+  .menu a:hover, .menu a:focus-visible { transform: none; }
   .menu__stacco { margin-top: 0; }
-  .testa__cv { margin-left: auto; }
 }
 
 /* ---------- I pannelli ----------
    Senza JavaScript sono sezioni normali. Con JavaScript sono nascosti
-   finché non si apre la loro bolla (pannelli.js). */
+   finché non si apre la loro particella (pannelli.js). */
 .pannello {
   position: relative;
   padding: clamp(2rem, 6vw, 5rem) var(--margine);
@@ -97,22 +114,20 @@
   position: fixed; inset: 0; z-index: 20;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--carta);
-}
-.js .pannello.e-aperto { display: grid; }
-.js .pannello {
-  background: #fbfaf8;
+  background: var(--pannello);
   --ritaglio: clamp(10px, 2.5vw, 36px);   /* lo stesso margine del ritaglio in pannelli.js */
   padding: calc(var(--ritaglio) + clamp(1.25rem, 4vw, 4rem));
 }
-/* Quando un pannello è aperto, la scena dietro si sfoca e si schiarisce */
-.palco { transition: filter 600ms ease, opacity 600ms ease; }
-.palco[inert] { filter: blur(10px); opacity: 0.45; }
+.js .pannello.e-aperto { display: grid; }
 
-/* Lo strato colorato: è il colore della bolla che si allarga, poi svanisce */
+/* Quando un pannello è aperto, la scena dietro si sfoca e si spegne */
+.palco { transition: filter 600ms ease, opacity 600ms ease; }
+.palco[inert] { filter: blur(10px); opacity: 0.35; }
+
+/* Lo strato colorato: il colore della particella che si allarga, poi svanisce */
 .pannello::before {
   content: ""; position: fixed; inset: 0; z-index: 0;
-  background: radial-gradient(circle at 35% 30%, #fff 0 4%, var(--c1) 38%, var(--c2) 100%);
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--c1) 45%, var(--pannello)) 0%, var(--pannello) 75%);
   opacity: 0;
   pointer-events: none;
 }
@@ -125,7 +140,7 @@
   top: calc(var(--ritaglio) + 1rem); right: calc(var(--ritaglio) + 1rem);
   min-width: 2.75rem; min-height: 2.75rem; padding: 0 1.1rem;
   border: 0; border-radius: 999px;
-  background: var(--nero); color: var(--carta);
+  background: var(--chiaro); color: var(--fondo);
   font-weight: 700; font-size: var(--t-piccolo);
   cursor: pointer;
   transition: transform 200ms var(--ease);
@@ -147,7 +162,7 @@
 
 .scheda { display: grid; gap: 1rem; }
 .scheda div { display: grid; grid-template-columns: 7.5rem 1fr; gap: 1rem; }
-.scheda dt { font-weight: 700; }
+.scheda dt { font-weight: 700; color: var(--tenue); }
 .scheda--contatti div { grid-template-columns: 6rem 1fr; }
 
 .pannello__immagini {
@@ -160,7 +175,7 @@
 .pannello__immagini figcaption { margin-top: 0.5rem; font-size: var(--t-piccolo); color: var(--tenue); }
 
 .pannello__dopo { grid-column: 1 / -1; font-weight: 700; font-size: var(--t-frase); }
-.pannello__stella { grid-column: 9 / 13; grid-row: 2; width: 100%; aspect-ratio: 900 / 940; transform: rotate(-14deg); }
+.pannello__stella { grid-column: 9 / 13; grid-row: 2; width: 100%; height: auto; }
 
 .contatti__email {
   font-weight: 900; font-size: clamp(2rem, 1rem + 5vw, 5.5rem);

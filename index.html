@@ -12,50 +12,39 @@
   <meta property="og:description" content="Web & visual designer. Cerco uno stage in sviluppo frontend.">
   <meta property="og:image" content="assets/img/anteprima.jpg">
   <meta property="og:locale" content="it_IT">
-  <meta name="theme-color" content="#f2f1ef">
+  <meta name="theme-color" content="#0b0b0c">
 
-  <link rel="preload" href="assets/fonts/satoshi-900.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/anton-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/satoshi-500.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/home.css">
+  <!-- Three.js (la libreria per il 3D nel browser) caricato da un CDN, senza installare niente -->
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" } }
+  </script>
   <!-- Diciamo subito al CSS che JavaScript c'è, prima che la pagina si disegni -->
   <script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
   <a class="salta" href="#menu">Vai al menu</a>
 
-  <!-- La stella di Matilde, disegnata una volta e riusata con <use> -->
-  <svg class="solo-lettori" aria-hidden="true" focusable="false">
-    <defs>
-      <filter id="sgranato" x="-10%" y="-10%" width="120%" height="120%">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="9" result="morbido"/>
-        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="4" result="rumore"/>
-        <feComposite in="morbido" in2="rumore" operator="arithmetic" k1="0" k2="1.4" k3="0.75" k4="-0.62" result="misto"/>
-        <feComponentTransfer in="misto" result="soglia"><feFuncA type="discrete" tableValues="0 1"/></feComponentTransfer>
-        <feFlood flood-color="#510000"/>
-        <feComposite in2="soglia" operator="in"/>
-      </filter>
-      <symbol id="forma-stella" viewBox="0 0 900 940">
-        <path d="M15 10 Q205 225 245 288 Q330 185 520 48 Q405 300 372 372 Q560 445 885 515 Q565 488 352 497 Q425 705 510 928 Q325 700 208 515 Q100 640 18 695 Q150 505 135 345 Q62 205 15 10 Z"/>
-      </symbol>
-    </defs>
-  </svg>
-
   <!-- ===== La scena: nome, PORTFOLIO, bolle, menu ===== -->
   <div class="palco" data-palco>
     <header class="testa">
-      <svg class="stella testa__stella" viewBox="0 0 900 940" aria-hidden="true" focusable="false"><use href="#forma-stella" width="900" height="940" filter="url(#sgranato)"/></svg>
+      <img class="testa__stella" src="assets/img/stella.png" width="891" height="934" alt="">
       <p class="testa__chi"><strong>Matilde Canelli</strong><br>Web &amp; visual designer.<br>Cerco uno stage in sviluppo frontend.</p>
-      <a class="link testa__cv" href="assets/docs/Canelli_Matilde_CV.pdf" download>Scarica il CV</a>
     </header>
+    <a class="link palco__cv" href="assets/docs/Canelli_Matilde_CV.pdf" download>Scarica il CV</a>
 
-    <!-- Il titolo vero è il testo nascosto; la scritta grande la disegna js/palco.js.
-         Senza JavaScript si vede PORTFOLIO scritto normalmente. -->
+    <!-- Il titolo vero è il testo nascosto; la scritta grande la disegna js/palco.js
+         dentro il canvas 3D, così le bolle di vetro possono rifrangerla.
+         Senza JavaScript (o senza WebGL) si vede PORTFOLIO scritto normalmente. -->
     <h1 class="palco__titolo">
       <span class="solo-lettori">Portfolio di Matilde Canelli</span>
       <span class="palco__riserva" aria-hidden="true">Portfolio</span>
     </h1>
-    <svg class="palco__scena" data-scena aria-hidden="true" focusable="false"></svg>
+    <canvas class="palco__scena" data-scena aria-hidden="true"></canvas>
+    <span class="palco__etichetta" data-etichetta aria-hidden="true"></span>
 
     <!-- Il menu: ogni voce è anche una bolla che viaggia sulla scena -->
     <nav class="menu" id="menu" aria-label="Progetti e pagine">
@@ -76,7 +65,7 @@
        Senza JavaScript sono semplici sezioni una sotto l'altra. -->
   <main class="pannelli" id="contenuto">
 
-    <section class="pannello" id="imaze" aria-labelledby="imaze-titolo" data-pannello style="--c1:#e13155; --c2:#1d1d1b; --titolo:#c22448">
+    <section class="pannello" id="imaze" aria-labelledby="imaze-titolo" data-pannello style="--c1:#e13155; --c2:#1d1d1b; --titolo:#ff6b85">
       <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
       <div class="pannello__testo">
         <h2 class="pannello__titolo" id="imaze-titolo" tabindex="-1"><span>Landing page</span> <span class="pannello__nome">Imaze</span></h2>
@@ -99,7 +88,7 @@
       <p class="pannello__dopo"><a class="link" href="#synapses">Progetto successivo: Synapses</a></p>
     </section>
 
-    <section class="pannello" id="synapses" aria-labelledby="synapses-titolo" data-pannello style="--c1:#fcc505; --c2:#ed7238; --titolo:#b04614">
+    <section class="pannello" id="synapses" aria-labelledby="synapses-titolo" data-pannello style="--c1:#fcc505; --c2:#ed7238; --titolo:#fcc505">
       <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
       <div class="pannello__testo">
         <h2 class="pannello__titolo" id="synapses-titolo" tabindex="-1"><span>Progetto</span> <span class="pannello__nome">Synapses</span></h2>
@@ -126,7 +115,7 @@
       <p class="pannello__dopo"><a class="link" href="#ju1ce">Progetto successivo: JU1CE</a></p>
     </section>
 
-    <section class="pannello" id="ju1ce" aria-labelledby="ju1ce-titolo" data-pannello style="--c1:#a0db2e; --c2:#5120f5; --titolo:#5120f5">
+    <section class="pannello" id="ju1ce" aria-labelledby="ju1ce-titolo" data-pannello style="--c1:#a0db2e; --c2:#5120f5; --titolo:#a0db2e">
       <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
       <div class="pannello__testo">
         <h2 class="pannello__titolo" id="ju1ce-titolo" tabindex="-1"><span>Progetto</span> <span class="pannello__nome">JU1CE</span></h2>
@@ -148,7 +137,7 @@
       <p class="pannello__dopo"><a class="link" href="#energiapura">Progetto successivo: EnergiaPura</a></p>
     </section>
 
-    <section class="pannello" id="energiapura" aria-labelledby="energiapura-titolo" data-pannello style="--c1:#519898; --c2:#1b2859; --titolo:#1b2859">
+    <section class="pannello" id="energiapura" aria-labelledby="energiapura-titolo" data-pannello style="--c1:#519898; --c2:#1b2859; --titolo:#7cc9c9">
       <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
       <div class="pannello__testo">
         <h2 class="pannello__titolo" id="energiapura-titolo" tabindex="-1"><span>Progetto</span> <span class="pannello__nome">EnergiaPura</span></h2>
@@ -167,7 +156,7 @@
       <p class="pannello__dopo"><a class="link" href="#virtuoso">Progetto successivo: Virtuoso</a></p>
     </section>
 
-    <section class="pannello" id="virtuoso" aria-labelledby="virtuoso-titolo" data-pannello style="--c1:#b28c83; --c2:#510000; --titolo:#510000">
+    <section class="pannello" id="virtuoso" aria-labelledby="virtuoso-titolo" data-pannello style="--c1:#b28c83; --c2:#510000; --titolo:#dcb8ae">
       <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
       <div class="pannello__testo">
         <h2 class="pannello__titolo" id="virtuoso-titolo" tabindex="-1"><span>Progetto</span> <span class="pannello__nome">Virtuoso</span></h2>
@@ -186,7 +175,7 @@
       <p class="pannello__dopo"><a class="link" href="#imaze">Ricomincia: Imaze</a></p>
     </section>
 
-    <section class="pannello" id="chi-sono" aria-labelledby="chi-sono-titolo" data-pannello style="--c1:#c0392b; --c2:#510000; --titolo:#510000">
+    <section class="pannello" id="chi-sono" aria-labelledby="chi-sono-titolo" data-pannello style="--c1:#c0392b; --c2:#510000; --titolo:#ef7a6c">
       <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
       <div class="pannello__testo pannello__testo--largo">
         <h2 class="pannello__titolo" id="chi-sono-titolo" tabindex="-1"><span class="pannello__nome">Ma chi è?</span></h2>
@@ -195,10 +184,10 @@
         <p>Della comunicazione e della grafica mi piace poter progettare, fare domande e creare connessioni. Credo che la differenza stia nella cura dei dettagli: forse per questo mi complico la vita finché un progetto non mi convince davvero.</p>
         <p>Per il resto lascio parlare i miei lavori.</p>
       </div>
-      <svg class="stella pannello__stella" viewBox="0 0 900 940" aria-hidden="true" focusable="false"><use href="#forma-stella" width="900" height="940" filter="url(#sgranato)"/></svg>
+      <img class="pannello__stella" src="assets/img/stella.png" width="891" height="934" alt="" loading="lazy">
     </section>
 
-    <section class="pannello" id="contatti" aria-labelledby="contatti-titolo" data-pannello style="--c1:#510000; --c2:#120202; --titolo:#510000">
+    <section class="pannello" id="contatti" aria-labelledby="contatti-titolo" data-pannello style="--c1:#510000; --c2:#120202; --titolo:#f1efea">
       <button class="pannello__chiudi" type="button" data-chiudi>Chiudi</button>
       <div class="pannello__testo pannello__testo--largo">
         <h2 class="pannello__titolo" id="contatti-titolo" tabindex="-1"><span class="pannello__nome">Contatti</span></h2>
@@ -216,7 +205,7 @@
     </section>
   </main>
 
-  <script src="js/palco.js" defer></script>
+  <script src="js/palco.js" type="module"></script>
   <script src="js/pannelli.js" defer></script>
 </body>
 </html>

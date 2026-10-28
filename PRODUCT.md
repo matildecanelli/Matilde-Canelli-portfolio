@@ -44,16 +44,16 @@ Design e sviluppo **alla pari**: Matilde progetta l'identità visiva e scrive il
 
 ## Brand Commitments
 
-**28/10/2026, visione aggiornata di Matilde** (sostituisce le lettere-goccia bordeaux; riferimenti: manifesti "VISION" e "YOUR REALITY IS NOT MINE", la pagina "Blobs", il menu di lucabotturi.com).
+**28/10/2026, versione corrente** (riferimenti: manifesto "VISION", la home di lucabotturi.com, il suo menu).
 
-- **Apertura:** la scritta PORTFOLIO grande, solida, nera, in un grottesco pesante. Sopra viaggiano di continuo bolle e blob lucidi, sfumati, con riflessi.
-- **Le bolle fanno da lente:** dove una bolla passa sopra PORTFOLIO, le lettere sotto si deformano e diventano liquide; fuori dalla bolla restano nette.
-- **Una bolla per ogni voce del menu:** i 5 progetti, Chi sono, Contatti. Ogni bolla progetto è sfumata nei due colori del suo progetto (TESTI.md): Imaze #1d1d1b/#e13155, Synapses #fcc505/#ed7238, JU1CE #5120f5/#a0db2e, EnergiaPura #1b2859/#519898, Virtuoso #b28c83/#510000. Chi sono e Contatti nel mondo della stella (bordeaux): da confermare.
-- **Menu a destra.** Scegliendo una voce (dal menu o cliccando la bolla), la sua bolla, che sta viaggiando, si apre: si allarga tirando gli angoli fino ai vertici della pagina, poi si restringe sul pannello con il contenuto (progetto, Chi sono, Contatti). Ispirazione: l'apertura dei pannelli di lucabotturi.com, ricreata da zero.
-- **La stella di Matilde** resta un elemento del mondo, insieme alle bolle.
-- **Ogni pannello ha il suo indirizzo** (es. `#imaze`) per poter mandare il link a un singolo progetto; senza JavaScript i contenuti restano leggibili come pagina normale.
-- **Testi:** Satoshi (il font del CV).
-- **Telefono:** le bolle si toccano direttamente; il menu laterale va adattato allo schermo stretto.
+- **Palette nera:** tutto il sito, pannelli compresi, su fondo quasi nero; testo chiaro.
+- **PORTFOLIO al centro** della schermata, in orizzontale e in verticale, grande, in Anton (il carattere "tipo Impact": Impact non si può pubblicare). È disegnato dentro la scena 3D così le bolle lo possono rifrangere.
+- **Bolle di vetro (Three.js / WebGL):** sfere di vetro che rifrangono PORTFOLIO con dispersione cromatica (le lettere si aprono in frange blu e gialle ai bordi), con riflessi e bordo luminoso; ognuna ha appena la tinta del suo progetto. Vagano su tutta la schermata. Riferimento: il prompt "Design World" con il cubo di vetro, adattato a bolle.
+- **La stella di Matilde riflessa** sulla superficie di ogni bolla; il riflesso si sposta seguendo il mouse.
+- **Una particella per ogni voce del menu:** i 5 progetti, Chi sono, Contatti, con una tinta spenta del colore del progetto.
+- **Menu piccolo e minimale**, a destra, centrato sull'altezza dello schermo (sul telefono in basso, centrato).
+- **Apertura:** scegliendo una voce, la sua particella si allarga fino ai vertici della pagina e poi si restringe sul pannello del contenuto (ispirazione: lucabotturi.com, ricreata da zero). Ogni pannello ha il suo indirizzo (es. `#imaze`).
+- **La stella di Matilde**, quella originale (PNG del portfolio), accanto al nome e in Chi sono. Se Matilde fornisce l'SVG originale, sostituisce il PNG. **Testi:** Satoshi.
 
 Restano vincolanti: i testi di `materiale-sito/TESTI.md` così come sono, le immagini dei progetti, il tono diretto e ironico in prima persona.
 

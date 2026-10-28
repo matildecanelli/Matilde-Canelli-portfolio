@@ -1,260 +1,405 @@
 /* ==========================================================================
-   palco.js: PORTFOLIO e le bolle-lente
+   palco.js: PORTFOLIO e le bolle di vetro (Three.js, WebGL)
 
-   Come funziona l'effetto lente, in tre strati dello stesso SVG:
-   1. PORTFOLIO nitido, con una maschera che lo nasconde DENTRO le bolle.
-   2. Le bolle colorate.
-   3. Una seconda copia di PORTFOLIO, deformata da un filtro (turbolenza +
-      spostamento dei pixel), con una maschera che la mostra SOLO dentro le bolle.
-   Così fuori dalle bolle le lettere sono nette, dentro diventano liquide.
-   Ogni bolla è definita una sola volta (<ellipse> in <defs>) e riusata con
-   <use> nei tre posti: muovendo quella, si muove tutto insieme.
+   L'idea, in quattro passi:
+   1. PORTFOLIO viene disegnato in un canvas 2D nascosto e diventa una
+      "texture": un'immagine che la scheda grafica può leggere.
+   2. Quella texture riempie lo sfondo della scena 3D.
+   3. Le bolle sono sfere con un materiale fatto a mano (uno "shader"):
+      ogni punto della bolla legge lo sfondo spostato come farebbe il vetro
+      (rifrazione), e lo legge 6 volte con indici diversi per ogni colore,
+      così ai bordi le lettere si aprono in frange colorate (dispersione).
+   4. Sulla superficie di ogni bolla si riflette la stella di Matilde.
+   Ogni bolla è una voce del menu: cliccandola si apre il suo pannello.
    ========================================================================== */
 
-(function () {
-  const svg = document.querySelector('[data-scena]');
-  if (!svg) return;
-  const NS = 'http://www.w3.org/2000/svg';
-  const menoMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+import * as THREE from 'three';
 
-  // Le voci arrivano dal menu: nome, indirizzo e i due colori di ciascuna
-  const voci = [...document.querySelectorAll('[data-voce]')].map((a, i) => {
-    const stile = getComputedStyle(a);
+const canvas = document.querySelector('[data-scena]');
+const etichetta = document.querySelector('[data-etichetta]');
+const menoMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Le voci arrivano dal menu: indirizzo, nome e colore di ciascuna
+const voci = [...document.querySelectorAll('[data-voce]')].map((a, i) => ({
+  id: a.dataset.voce,
+  nome: a.textContent.trim(),
+  colore: getComputedStyle(a).getPropertyValue('--c1').trim(),
+  menu: a,
+  indice: i,
+}));
+
+/* ---------- 0. Il motore: se WebGL non c'è, resta la scritta normale ---------- */
+let motore;
+try {
+  motore = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+} catch (errore) {
+  document.documentElement.classList.add('senza-webgl');
+}
+
+if (motore) avvia();
+
+function avvia() {
+  motore.setClearColor(0x0b0b0c, 1);
+  motore.outputColorSpace = THREE.SRGBColorSpace;
+  const stretto = () => window.innerWidth < 640 || window.innerWidth / window.innerHeight < 1;
+
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+  camera.position.set(0, 0, 10);
+  camera.lookAt(0, 0, 0);
+
+  /* ---------- 1. PORTFOLIO in un canvas 2D, che diventa texture ---------- */
+  const tela = document.createElement('canvas');
+  const pennello = tela.getContext('2d');
+  const sfondo = new THREE.CanvasTexture(tela);
+  sfondo.colorSpace = THREE.SRGBColorSpace;
+  sfondo.minFilter = THREE.LinearFilter;
+  sfondo.generateMipmaps = false;
+
+  function disegnaScritta(L, A, dpr) {
+    tela.width = Math.round(L * dpr);
+    tela.height = Math.round(A * dpr);
+    pennello.setTransform(dpr, 0, 0, dpr, 0, 0);
+    pennello.fillStyle = '#0b0b0c';
+    pennello.fillRect(0, 0, L, A);
+
+    // La parola deve stare lontana dal menu: stesso spazio libero a destra e a sinistra
+    const menu = document.querySelector('.menu').getBoundingClientRect();
+    const margine = Math.max(16, Math.min(36, L * 0.025));
+    const telefono = stretto();
+    const libero = telefono ? L - margine * 2 : L - 2 * (menu.width + margine * 3);
+    const righe = telefono ? ['PORT', 'FOLIO'] : ['PORTFOLIO'];
+
+    let corpo = 100;
+    pennello.font = `400 ${corpo}px Anton`;
+    const piuLarga = Math.max(...righe.map((r) => pennello.measureText(r).width));
+    corpo = Math.min((libero / piuLarga) * 100, A * (telefono ? 0.26 : 0.34));
+    pennello.font = `400 ${corpo}px Anton`;
+    pennello.fillStyle = '#e9e9e9';
+    pennello.textAlign = 'center';
+    pennello.textBaseline = 'alphabetic';
+
+    // al centro esatto: l'altezza delle maiuscole di Anton è circa 0.73 del corpo
+    const maiuscole = corpo * 0.73;
+    const interlinea = corpo * 0.95;
+    const centroY = A * (telefono ? 0.46 : 0.5);
+    righe.forEach((riga, i) => {
+      const y = centroY + maiuscole / 2 + (i - (righe.length - 1) / 2) * interlinea;
+      pennello.fillText(riga, L / 2, y);
+    });
+    sfondo.needsUpdate = true;
+  }
+
+  // Lo sfondo è un rettangolo che copre tutto lo schermo
+  const scenaSfondo = new THREE.Scene();
+  const quadro = new THREE.Mesh(
+    new THREE.PlaneGeometry(2, 2),
+    new THREE.ShaderMaterial({
+      uniforms: { uTex: { value: sfondo } },
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+      fragmentShader: `uniform sampler2D uTex; varying vec2 vUv;
+        void main(){ gl_FragColor = texture2D(uTex, vUv);
+        #include <colorspace_fragment>
+        }`,
+      depthTest: false,
+      depthWrite: false,
+    })
+  );
+  quadro.frustumCulled = false;
+  scenaSfondo.add(quadro);
+
+  /* ---------- 2. Il vetro: lo shader delle bolle ---------- */
+  const giri = stretto() ? 8 : 16;   // quante letture per pixel: meno sul telefono, che è più lento
+  const vertice = `
+    varying vec3 vNormal; varying vec3 vEye;
+    void main(){
+      vec4 mondo = modelMatrix * vec4(position, 1.0);
+      vec4 vista = viewMatrix * mondo;
+      gl_Position = projectionMatrix * vista;
+      vNormal = normalize(normalMatrix * normal);
+      vEye = normalize(vista.xyz);
+    }`;
+  const frammento = `
+    #define GIRI ${giri}
+    uniform sampler2D uTexture; uniform sampler2D uStella; uniform vec2 uResolution;
+    uniform float uIorR, uIorY, uIorG, uIorC, uIorB, uIorP;
+    uniform float uRefractPower, uChromatic, uSaturation, uShininess, uDiffuseness, uFresnelPower;
+    uniform vec3 uLight; uniform float uBackside; uniform vec3 uTinta;
+    uniform vec2 uSpostaStella; uniform float uForzaStella;
+    varying vec3 vNormal; varying vec3 vEye;
+
+    vec3 saturazione(vec3 c, float a){ float l = dot(c, vec3(0.2125, 0.7154, 0.0721)); return mix(vec3(l), c, a); }
+    float luce(vec3 dir, float lucidita, float diffusa, vec3 n, vec3 occhio){
+      vec3 l = normalize(-dir); vec3 meta = normalize(-occhio + l);
+      return pow(max(dot(n, meta), 0.0), lucidita) + max(0.0, dot(n, l)) * diffusa;
+    }
+    vec3 leggi(vec2 uv){ return texture2D(uTexture, uv).rgb; }
+
+    void main(){
+      vec2 uv = gl_FragCoord.xy / uResolution;
+      vec3 n = normalize(vNormal);
+      if (uBackside > 0.5) n = -n;
+      vec3 occhio = normalize(vEye);
+      vec3 colore = vec3(0.0);
+
+      for (int i = 0; i < GIRI; i++) {
+        float scivola = float(i) / float(GIRI) * 0.045;
+        vec3 rR = refract(occhio, n, 1.0 / uIorR);
+        vec3 rY = refract(occhio, n, 1.0 / uIorY);
+        vec3 rG = refract(occhio, n, 1.0 / uIorG);
+        vec3 rC = refract(occhio, n, 1.0 / uIorC);
+        vec3 rB = refract(occhio, n, 1.0 / uIorB);
+        vec3 rP = refract(occhio, n, 1.0 / uIorP);
+        float r = leggi(uv + rR.xy * (uRefractPower + scivola * 1.0) * uChromatic).x * 0.5;
+        vec3 tY = leggi(uv + rY.xy * (uRefractPower + scivola * 1.0) * uChromatic);
+        float y = (tY.x * 2.0 + tY.y * 2.0 - tY.z) / 6.0;
+        float g = leggi(uv + rG.xy * (uRefractPower + scivola * 2.0) * uChromatic).y * 0.5;
+        vec3 tC = leggi(uv + rC.xy * (uRefractPower + scivola * 2.5) * uChromatic);
+        float c = (tC.y * 2.0 + tC.z * 2.0 - tC.x) / 6.0;
+        float b = leggi(uv + rB.xy * (uRefractPower + scivola * 3.0) * uChromatic).z * 0.5;
+        vec3 tP = leggi(uv + rP.xy * (uRefractPower + scivola * 1.0) * uChromatic);
+        float p = (tP.z * 2.0 + tP.x * 2.0 - tP.y) / 6.0;
+        float R = r + (2.0 * p + 2.0 * y - c) / 3.0;
+        float G = g + (2.0 * y + 2.0 * c - p) / 3.0;
+        float B = b + (2.0 * c + 2.0 * p - y) / 3.0;
+        colore += vec3(R, G, B);
+      }
+      colore /= float(GIRI);
+      colore = saturazione(colore, uSaturation);
+
+      float lampi = luce(uLight, uShininess, uDiffuseness, n, occhio)
+                  + 0.6 * luce(vec3(1.0, 1.0, -1.0), uShininess * 0.6, uDiffuseness * 0.5, n, occhio);
+      colore += lampi * (uBackside > 0.5 ? 0.35 : 1.0);
+
+      // bordo luminoso (Fresnel), appena tinto del colore del progetto
+      float f = pow(1.0 + dot(occhio, n), uFresnelPower);
+      colore = mix(colore, mix(vec3(1.0), uTinta, 0.45), f * (uBackside > 0.5 ? 0.25 : 0.55));
+
+      // la stella di Matilde riflessa sulla superficie (solo sul lato davanti)
+      if (uBackside < 0.5) {
+        vec3 rifl = reflect(occhio, n);
+        vec2 suv = (rifl.xy - uSpostaStella) * 1.7 + 0.5;
+        suv.y = 1.0 - suv.y;
+        if (suv.x > 0.0 && suv.x < 1.0 && suv.y > 0.0 && suv.y < 1.0) {
+          float stella = texture2D(uStella, suv).a;
+          colore += stella * uForzaStella * vec3(1.0, 0.82, 0.82);
+        }
+      }
+
+      colore += vec3(0.004, 0.005, 0.007);
+      gl_FragColor = vec4(colore, 1.0);
+      #include <colorspace_fragment>
+    }`;
+
+  // la stella, caricata come texture (finché non arriva, il riflesso è spento)
+  const stellaTex = new THREE.TextureLoader().load('assets/img/stella.png', () => {
+    for (const b of bolle) { b.davanti.uniforms.uForzaStella.value = 0.9; }
+    disegnaSeFermo();
+  });
+
+  const uniformiBase = () => ({
+    uTexture: { value: null }, uStella: { value: stellaTex }, uResolution: { value: new THREE.Vector2() },
+    uIorR: { value: 1.15 }, uIorY: { value: 1.16 }, uIorG: { value: 1.18 },
+    uIorC: { value: 1.22 }, uIorB: { value: 1.22 }, uIorP: { value: 1.22 },
+    uRefractPower: { value: 0.3 }, uChromatic: { value: 0.5 }, uSaturation: { value: 1.08 },
+    uShininess: { value: 90 }, uDiffuseness: { value: 0.02 }, uFresnelPower: { value: 5.0 },
+    uLight: { value: new THREE.Vector3(-1, 1, 1) }, uBackside: { value: 0 },
+    uTinta: { value: new THREE.Color(1, 1, 1) },
+    uSpostaStella: { value: new THREE.Vector2(-0.38, 0.4) }, uForzaStella: { value: 0 },
+  });
+
+  /* ---------- 3. Le bolle: una per voce ---------- */
+  const forma = new THREE.SphereGeometry(1, 96, 64);
+  const scena = new THREE.Scene();
+  function casuale(n) { const x = Math.sin(n * 91.7) * 43758.5; return x - Math.floor(x); }
+
+  const bolle = voci.map((v, i) => {
+    const davanti = new THREE.ShaderMaterial({ uniforms: uniformiBase(), vertexShader: vertice, fragmentShader: frammento, side: THREE.FrontSide });
+    const dietro = new THREE.ShaderMaterial({ uniforms: uniformiBase(), vertexShader: vertice, fragmentShader: frammento, side: THREE.BackSide });
+    dietro.uniforms.uBackside.value = 1;
+    dietro.uniforms.uRefractPower.value = 0.22;
+    // la tinta del progetto, spenta: mescolata con il grigio
+    const tinta = new THREE.Color(v.colore).lerp(new THREE.Color(0.7, 0.7, 0.7), 0.55);
+    davanti.uniforms.uTinta.value = tinta;
+    dietro.uniforms.uTinta.value = tinta;
+    const sfera = new THREE.Mesh(forma, davanti);
+    sfera.userData.voce = v;
+    scena.add(sfera);
     return {
-      id: a.dataset.voce,
-      nome: a.textContent.trim(),
-      c1: stile.getPropertyValue('--c1').trim(),
-      c2: stile.getPropertyValue('--c2').trim(),
-      menu: a,
-      indice: i,
+      voce: v, sfera, davanti, dietro,
+      dimensione: (i < 5 ? 0.85 + casuale(i) * 0.4 : 0.72),
+      fase: casuale(i + 7) * Math.PI * 2,
+      x: 0, y: 0, vx: 0, vy: 0, scala: 1, scalaObiettivo: 1,
     };
   });
 
-  // Piccolo aiuto per creare elementi SVG con i loro attributi
-  function crea(tag, attributi = {}, genitore) {
-    const el = document.createElementNS(NS, tag);
-    for (const [k, v] of Object.entries(attributi)) el.setAttribute(k, v);
-    if (genitore) genitore.appendChild(el);
-    return el;
+  /* ---------- 4. Due "fogli" su cui disegnare prima dello schermo ---------- */
+  const fogli = [0, 1].map(() => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType }));
+  const [foglioDietro, foglioDavanti] = fogli;
+  for (const b of bolle) {
+    b.dietro.uniforms.uTexture.value = foglioDietro.texture;
+    b.davanti.uniforms.uTexture.value = foglioDavanti.texture;
   }
 
-  /* ---------- Costruzione dell'SVG ---------- */
-  const defs = crea('defs', {}, svg);
+  /* ---------- Misure: tutto si ricalcola quando cambia la finestra ---------- */
+  let L = 0, A = 0, altezzaVista = 0, larghezzaVista = 0;
+  function misura() {
+    L = window.innerWidth;
+    A = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    motore.setPixelRatio(dpr);
+    motore.setSize(L, A, false);
+    camera.aspect = L / A;
+    camera.updateProjectionMatrix();
+    altezzaVista = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+    larghezzaVista = altezzaVista * camera.aspect;
+    const buffer = motore.getDrawingBufferSize(new THREE.Vector2());
+    for (const f of fogli) f.setSize(buffer.x, buffer.y);
+    for (const b of bolle) { b.davanti.uniforms.uResolution.value.copy(buffer); b.dietro.uniforms.uResolution.value.copy(buffer); }
+    disegnaScritta(L, A, dpr);
 
-  // Il filtro "liquido": il rumore sposta i pixel delle lettere
-  const liquido = crea('filter', { id: 'liquido', x: '-10%', y: '-30%', width: '120%', height: '160%' }, defs);
-  const ingrassa = crea('feMorphology', { operator: 'dilate', radius: '3', result: 'grasso' }, liquido);
-  const rumore = crea('feTurbulence', { type: 'fractalNoise', baseFrequency: '0.006', numOctaves: '1', seed: '7', result: 'rumore' }, liquido);
-  const sposta = crea('feDisplacementMap', { in: 'grasso', in2: 'rumore', scale: '60', xChannelSelector: 'R', yChannelSelector: 'G', result: 'spostato' }, liquido);
-  // sfoca e poi ripassa netto: i bordi strappati diventano gocce morbide
-  const ammorbidisci = crea('feGaussianBlur', { in: 'spostato', stdDeviation: '5', result: 'sfocato' }, liquido);
-  crea('feColorMatrix', { in: 'sfocato', values: '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8' }, liquido);
-  // il rumore "respira" piano, così il liquido sembra muoversi (solo su schermi grandi)
-  if (!menoMovimento && window.innerWidth > 700) {
-    crea('animate', { attributeName: 'baseFrequency', values: '0.006;0.009;0.006', dur: '10s', repeatCount: 'indefinite' }, rumore);
+    // grandezza delle bolle: in pixel sullo schermo, poi tradotta in unità della scena
+    const base = Math.min(L, A) * (stretto() ? 0.2 : 0.14);
+    bolle.forEach((b) => { b.raggio = (base * b.dimensione / A) * altezzaVista; });
   }
 
-  // Il riflesso lucido delle bolle: un'ellisse bianca sfocata
-  const lucido = crea('filter', { id: 'lucido', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
-  crea('feGaussianBlur', { stdDeviation: '6' }, lucido);
-
-  // Per ogni voce: la forma, il gradiente
-  voci.forEach((v) => {
-    v.forma = crea('ellipse', { id: `forma-${v.id}` }, defs);
-    const g = crea('radialGradient', { id: `colore-${v.id}`, cx: '35%', cy: '30%', r: '80%' }, defs);
-    crea('stop', { offset: '0%', 'stop-color': '#ffffff' }, g);
-    crea('stop', { offset: '12%', 'stop-color': v.c1 }, g);
-    crea('stop', { offset: '55%', 'stop-color': v.c1 }, g);
-    crea('stop', { offset: '100%', 'stop-color': v.c2 }, g);
-  });
-
-  // Le due maschere: "fuori" nasconde l'interno delle bolle, "dentro" mostra solo quello
-  const fuori = crea('mask', { id: 'fuori', maskUnits: 'userSpaceOnUse' }, defs);
-  const sfondoFuori = crea('rect', { fill: 'white' }, fuori);
-  const dentro = crea('mask', { id: 'dentro', maskUnits: 'userSpaceOnUse' }, defs);
-  const sfondoDentro = crea('rect', { fill: 'black' }, dentro);
-  voci.forEach((v) => {
-    crea('use', { href: `#forma-${v.id}`, fill: 'black' }, fuori);
-    crea('use', { href: `#forma-${v.id}`, fill: 'white' }, dentro);
-  });
-
-  // Strato 1: PORTFOLIO nitido
-  const scrittaNitida = crea('g', { mask: 'url(#fuori)', fill: 'currentColor' }, svg);
-  // Strato 2: le bolle (ognuna è un link al suo pannello)
-  const bolle = crea('g', {}, svg);
-  voci.forEach((v) => {
-    v.link = crea('a', { href: `#${v.id}`, tabindex: '-1' }, bolle);   // da tastiera si usa il menu
-    crea('use', { href: `#forma-${v.id}`, fill: `url(#colore-${v.id})` }, v.link);
-    // il riflesso sta nel gruppo della bolla: una bolla dietro non presta le sue luci a quella davanti
-    v.riflesso = crea('ellipse', { fill: 'white', opacity: '0.5', filter: 'url(#lucido)', 'pointer-events': 'none' }, v.link);
-    v.punto = crea('circle', { fill: 'white', opacity: '0.9', 'pointer-events': 'none' }, v.link);
-    v.etichetta = crea('text', { class: 'etichetta', 'text-anchor': 'middle' }, v.link);
-    v.etichetta.textContent = v.nome;
-  });
-  // Strato 3: PORTFOLIO liquido, visibile solo dentro le bolle
-  const scrittaLiquida = crea('g', { mask: 'url(#dentro)', filter: 'url(#liquido)', fill: 'currentColor', 'pointer-events': 'none' }, svg);
-
-  /* ---------- Misure: la scritta occupa tutta la larghezza ---------- */
-  let L = 0;  // larghezza della scena
-  let A = 0;  // altezza della scena
-
-  // Il recinto delle bolle: lontano dai testi del nome e del menu,
-  // così le scritte piccole restano sempre su fondo chiaro
-  const recinto = { sinistra: 0, destra: 0, alto: 0, basso: 0 };
-  function misuraRecinto() {
-    const scena = svg.getBoundingClientRect();
-    const testa = document.querySelector('.testa').getBoundingClientRect();
-    const menu = document.querySelector('.menu').getBoundingClientRect();
-    recinto.sinistra = 0;
-    recinto.alto = testa.bottom - scena.top + 8;
-    if (L < 640) {
-      recinto.destra = L;
-      recinto.basso = menu.top - scena.top - 8;   // sul telefono il menu sta in basso
-    } else {
-      recinto.destra = menu.left - scena.left - 16; // su schermo largo il menu sta a destra
-      recinto.basso = A;
-    }
-  }
-
-  function scriviPortfolio() {
-    L = svg.clientWidth;
-    A = svg.clientHeight;
-    svg.setAttribute('viewBox', `0 0 ${L} ${A}`);
-    for (const r of [sfondoFuori, sfondoDentro]) { r.setAttribute('width', L); r.setAttribute('height', A); }
-
-    const margine = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--margine')) * 16 || 24;
-    const stretto = L < 640;
-    const righe = stretto ? ['PORT', 'FOLIO'] : ['PORTFOLIO'];
-
-    for (const gruppo of [scrittaNitida, scrittaLiquida]) gruppo.replaceChildren();
-
-    // Prima misuriamo la parola a 100px, poi la ingrandiamo per riempire la larghezza
-    const prova = crea('text', { 'font-family': 'Satoshi', 'font-weight': '900', 'font-size': '100', 'letter-spacing': '-4' }, svg);
-    prova.textContent = stretto ? 'FOLIO' : 'PORTFOLIO';
-    const larghezzaA100 = prova.getComputedTextLength();
-    prova.remove();
-    const corpo = Math.min(((L - margine * 2) / larghezzaA100) * 100, A * (stretto ? 0.24 : 0.36));
-    const interlinea = corpo * 0.86;
-    // la deformazione è proporzionale alla grandezza delle lettere
-    ingrassa.setAttribute('radius', (corpo * 0.011).toFixed(1));
-    sposta.setAttribute('scale', (corpo * 0.2).toFixed(1));
-    ammorbidisci.setAttribute('stdDeviation', (corpo * 0.016).toFixed(1));
-    // su schermi larghi la parola poggia sul fondo della pagina, sotto il menu;
-    // sul telefono sta a metà, tra il nome in alto e il menu in basso
-    const primaRiga = stretto ? A * 0.36 : A - margine - corpo * 0.04;
-
-    righe.forEach((parola, i) => {
-      for (const gruppo of [scrittaNitida, scrittaLiquida]) {
-        const t = crea('text', {
-          x: margine, y: primaRiga + i * interlinea,
-          'font-family': 'Satoshi', 'font-weight': '900',
-          'font-size': corpo.toFixed(1), 'letter-spacing': (-corpo * 0.04).toFixed(1),
-        }, gruppo);
-        t.textContent = parola;
-      }
-    });
-  }
-
-  /* ---------- Le bolle: posizione, velocità, forma ---------- */
-  function casuale(n) { const x = Math.sin(n * 91.7) * 43758.5; return x - Math.floor(x); }
-
-  function preparaBolle() {
-    const base = Math.min(L, A);
-    voci.forEach((v, i) => {
-      const progetto = i < 5;
-      v.raggio = base * (progetto ? 0.11 + casuale(i) * 0.05 : 0.085);
-      v.allungo = 1 + casuale(i + 3) * 0.45;             // quanto è ovale
-      const r = v.raggio * v.allungo;
-      v.x = recinto.sinistra + r + casuale(i + 11) * Math.max(1, recinto.destra - recinto.sinistra - 2 * r);
-      v.y = recinto.alto + r + casuale(i + 17) * Math.max(1, recinto.basso - recinto.alto - 2 * r);
+  function posizionaAllInizio() {
+    bolle.forEach((b, i) => {
+      b.x = (casuale(i + 11) - 0.5) * larghezzaVista * 0.8;
+      b.y = (casuale(i + 17) - 0.5) * altezzaVista * 0.8;
       const angolo = casuale(i + 23) * Math.PI * 2;
-      const velocita = (0.35 + casuale(i + 29) * 0.4) * Math.max(0.6, L / 1440);
-      v.vx = Math.cos(angolo) * velocita;
-      v.vy = Math.sin(angolo) * velocita;
-      v.giro = casuale(i + 31) * 180;
-      v.scala = 1;
-      v.scalaObiettivo = 1;
+      const velocita = (0.16 + casuale(i + 29) * 0.18) * (altezzaVista / 5.36);   // unità al secondo
+      b.vx = Math.cos(angolo) * velocita;
+      b.vy = Math.sin(angolo) * velocita;
     });
   }
 
-  function disegnaBolla(v, tempo) {
-    // un respiro lento: la bolla si allunga e si accorcia
-    const respiro = menoMovimento ? 0 : Math.sin(tempo * 0.0008 + v.indice) * 0.06;
-    const rx = v.raggio * v.scala * (v.allungo + respiro);
-    const ry = v.raggio * v.scala * (1 - respiro);
-    v.forma.setAttribute('cx', v.x.toFixed(1));
-    v.forma.setAttribute('cy', v.y.toFixed(1));
-    v.forma.setAttribute('rx', rx.toFixed(1));
-    v.forma.setAttribute('ry', ry.toFixed(1));
-    v.forma.setAttribute('transform', `rotate(${v.giro.toFixed(1)} ${v.x.toFixed(1)} ${v.y.toFixed(1)})`);
-    v.riflesso.setAttribute('cx', (v.x - rx * 0.3).toFixed(1));
-    v.riflesso.setAttribute('cy', (v.y - ry * 0.45).toFixed(1));
-    v.riflesso.setAttribute('rx', (rx * 0.3).toFixed(1));
-    v.riflesso.setAttribute('ry', (ry * 0.16).toFixed(1));
-    v.punto.setAttribute('cx', (v.x - rx * 0.36).toFixed(1));
-    v.punto.setAttribute('cy', (v.y - ry * 0.47).toFixed(1));
-    v.punto.setAttribute('r', (Math.min(rx, ry) * 0.06).toFixed(1));
-    v.etichetta.setAttribute('x', v.x.toFixed(1));
-    v.etichetta.setAttribute('y', (v.y + Math.max(rx, ry) + 22).toFixed(1));
+  /* ---------- Il disegno di un fotogramma ---------- */
+  function disegna() {
+    for (const b of bolle) {
+      const respiro = menoMovimento ? 0 : Math.sin(performance.now() * 0.0009 + b.fase) * 0.03;
+      b.sfera.position.set(b.x, b.y, b.voce.indice * 0.02);
+      b.sfera.scale.set(b.raggio * b.scala * (1 + respiro), b.raggio * b.scala * (1 - respiro), b.raggio * b.scala);
+    }
+    // 1. sfondo nel foglio "dietro"
+    motore.setRenderTarget(foglioDietro);
+    motore.render(scenaSfondo, camera);
+    // 2. sfondo + retro delle bolle nel foglio "davanti"
+    motore.setRenderTarget(foglioDavanti);
+    motore.render(scenaSfondo, camera);
+    for (const b of bolle) b.sfera.material = b.dietro;
+    motore.autoClear = false;
+    motore.render(scena, camera);
+    motore.autoClear = true;
+    // 3. sullo schermo: sfondo + fronte delle bolle, che leggono il foglio "davanti"
+    motore.setRenderTarget(null);
+    motore.render(scenaSfondo, camera);
+    for (const b of bolle) b.sfera.material = b.davanti;
+    motore.autoClear = false;
+    motore.clearDepth();
+    motore.render(scena, camera);
+    motore.autoClear = true;
   }
 
-  let fermo = false;   // diventa vero mentre un pannello è aperto
-  function passo(tempo) {
+  /* ---------- Movimento: le bolle vagano e rimbalzano sui bordi ---------- */
+  let fermo = false;
+  let ultimo = performance.now();
+  function passo(adesso) {
+    const dt = Math.min((adesso - ultimo) / 1000, 0.05);
+    ultimo = adesso;
     if (!fermo) {
-      for (const v of voci) {
-        v.x += v.vx;
-        v.y += v.vy;
-        // rimbalza sui bordi del recinto (la bolla intera resta dentro)
-        const r = v.raggio * v.allungo * v.scala;
-        if (v.x < recinto.sinistra + r || v.x > recinto.destra - r) v.vx *= -1;
-        if (v.y < recinto.alto + r || v.y > recinto.basso - r) v.vy *= -1;
-        v.x = Math.min(recinto.destra - r, Math.max(recinto.sinistra + r, v.x));
-        v.y = Math.min(recinto.basso - r, Math.max(recinto.alto + r, v.y));
-        v.giro += 0.04;
-        v.scala += (v.scalaObiettivo - v.scala) * 0.15;
-        disegnaBolla(v, tempo);
+      for (const b of bolle) {
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        const r = b.raggio * 0.35;   // il centro resta sullo schermo, la bolla può uscire un po'
+        const limX = larghezzaVista / 2 - r;
+        const limY = altezzaVista / 2 - r;
+        if (b.x < -limX || b.x > limX) { b.vx *= -1; b.x = THREE.MathUtils.clamp(b.x, -limX, limX); }
+        if (b.y < -limY || b.y > limY) { b.vy *= -1; b.y = THREE.MathUtils.clamp(b.y, -limY, limY); }
+        b.scala += (b.scalaObiettivo - b.scala) * Math.min(1, dt * 8);
       }
+      disegna();
+      aggiornaEtichetta();
     }
     requestAnimationFrame(passo);
   }
+  function disegnaSeFermo() { if (menoMovimento) disegna(); }
+
+  /* ---------- Il mouse e il dito: la stella si sposta, le bolle si toccano ---------- */
+  const raggio = new THREE.Raycaster();
+  const puntatore = new THREE.Vector2();
+  let sopra = null;      // la bolla sotto il puntatore
+  let inizio = null;     // dove è iniziato un tocco, per distinguere click e trascinamento
+
+  function bollaSotto(x, y) {
+    puntatore.set((x / L) * 2 - 1, -(y / A) * 2 + 1);
+    raggio.setFromCamera(puntatore, camera);
+    const colpita = raggio.intersectObjects(bolle.map((b) => b.sfera))[0];
+    return colpita ? bolle.find((b) => b.sfera === colpita.object) : null;
+  }
+  function evidenzia(b) {
+    if (sopra === b) return;
+    if (sopra && !sopra.daMenu) sopra.scalaObiettivo = 1;
+    sopra = b;
+    if (b) b.scalaObiettivo = 1.08;
+    canvas.classList.toggle('e-sopra-bolla', Boolean(b));
+    etichetta.textContent = b ? b.voce.nome : '';
+    etichetta.classList.toggle('e-visibile', Boolean(b));
+    disegnaSeFermo();
+  }
+  function aggiornaEtichetta() {
+    if (!sopra) return;
+    const p = new THREE.Vector3(sopra.x, sopra.y, 0).project(camera);
+    etichetta.style.left = `${(p.x + 1) / 2 * L}px`;
+    etichetta.style.top = `${(1 - p.y) / 2 * A}px`;
+  }
+
+  window.addEventListener('pointermove', (e) => {
+    // la stella riflessa segue il puntatore: si muove sulla superficie delle bolle
+    for (const b of bolle) {
+      b.davanti.uniforms.uSpostaStella.value.set(-0.38 + (e.clientX / L - 0.5) * 0.35, 0.4 - (e.clientY / A - 0.5) * 0.35);
+    }
+    if (e.target === canvas) evidenzia(bollaSotto(e.clientX, e.clientY));
+    else if (sopra && !sopra.daMenu) evidenzia(null);
+    if (menoMovimento) disegna();
+  });
+  canvas.addEventListener('pointerdown', (e) => { inizio = { x: e.clientX, y: e.clientY }; });
+  canvas.addEventListener('pointerup', (e) => {
+    if (!inizio || Math.hypot(e.clientX - inizio.x, e.clientY - inizio.y) > 8) return;   // era un trascinamento
+    const b = bollaSotto(e.clientX, e.clientY);
+    if (b) location.hash = b.voce.id;
+    inizio = null;
+  });
 
   // Passando sulla voce del menu, la sua bolla si gonfia e mostra il nome
-  voci.forEach((v) => {
-    const su = () => { v.scalaObiettivo = 1.18; v.link.classList.add('e-evidenza'); if (menoMovimento) disegnaBolla(v, 0); };
-    const giu = () => { v.scalaObiettivo = 1; v.link.classList.remove('e-evidenza'); if (menoMovimento) disegnaBolla(v, 0); };
-    for (const el of [v.menu, v.link]) {
-      el.addEventListener('pointerenter', su);
-      el.addEventListener('pointerleave', giu);
-    }
-    v.menu.addEventListener('focus', su);
-    v.menu.addEventListener('blur', giu);
+  bolle.forEach((b) => {
+    const su = () => { b.daMenu = true; evidenzia(b); };
+    const giu = () => { b.daMenu = false; b.scalaObiettivo = 1; if (sopra === b) evidenzia(null); };
+    b.voce.menu.addEventListener('pointerenter', su);
+    b.voce.menu.addEventListener('pointerleave', giu);
+    b.voce.menu.addEventListener('focus', su);
+    b.voce.menu.addEventListener('blur', giu);
   });
 
-  /* ---------- Avvio ---------- */
-  document.fonts.ready.then(() => {
-    scriviPortfolio();
-    misuraRecinto();
-    preparaBolle();
-    voci.forEach((v) => disegnaBolla(v, 0));
+  /* ---------- Avvio: aspettiamo il font, altrimenti la scritta nasce sbagliata ---------- */
+  const font = Promise.all([document.fonts.load('400 100px Anton'), document.fonts.ready]);
+  const attesa = new Promise((ok) => setTimeout(ok, 2500));
+  Promise.race([font, attesa]).then(() => {
+    misura();
+    posizionaAllInizio();
+    disegna();
     if (!menoMovimento) requestAnimationFrame(passo);
   });
-  window.addEventListener('resize', () => {
-    scriviPortfolio();
-    misuraRecinto();
-    preparaBolle();
-    voci.forEach((v) => disegnaBolla(v, 0));
-  });
+  window.addEventListener('resize', () => { misura(); disegna(); });
 
-  // Quello che serve a pannelli.js: dove sta una bolla adesso, e fermare/ripartire
+  // Quello che serve a pannelli.js: dove sta una bolla sullo schermo, e fermare/ripartire
   window.palco = {
     bolla(id) {
-      const v = voci.find((x) => x.id === id);
-      if (!v) return null;
-      const r = svg.getBoundingClientRect();
-      const scala = r.width / L;
-      return { x: r.left + v.x * scala, y: r.top + v.y * scala, raggio: v.raggio * v.allungo * v.scala * scala };
+      const b = bolle.find((x) => x.voce.id === id);
+      if (!b || !altezzaVista) return null;
+      const p = new THREE.Vector3(b.x, b.y, 0).project(camera);
+      return { x: (p.x + 1) / 2 * L, y: (1 - p.y) / 2 * A, raggio: (b.raggio * b.scala / altezzaVista) * A };
     },
-    ferma() { fermo = true; },
-    riparti() { fermo = false; },
+    ferma() { fermo = true; evidenzia(null); },
+    riparti() { fermo = false; ultimo = performance.now(); },
   };
-})();
+}

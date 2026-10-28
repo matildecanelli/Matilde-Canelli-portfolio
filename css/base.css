@@ -9,12 +9,16 @@
 @font-face { font-family: "Satoshi"; src: url("../assets/fonts/satoshi-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
 @font-face { font-family: "Satoshi"; src: url("../assets/fonts/satoshi-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
 @font-face { font-family: "Satoshi"; src: url("../assets/fonts/satoshi-900.woff2") format("woff2"); font-weight: 900; font-display: swap; }
+/* Anton: il carattere "tipo Impact" della scritta PORTFOLIO (Impact non si può pubblicare) */
+@font-face { font-family: "Anton"; src: url("../assets/fonts/anton-latin.woff2") format("woff2"); font-weight: 400; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Anton"; src: url("../assets/fonts/anton-latin-ext.woff2") format("woff2"); font-weight: 400; font-display: swap; unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 
 /* ---------- Variabili ---------- */
 :root {
-  --carta: #f2f1ef;        /* fondo: bianco appena caldo */
-  --nero: #141212;         /* testo e PORTFOLIO */
-  --tenue: #57524f;        /* testo secondario */
+  --fondo: #0b0b0c;        /* fondo: quasi nero */
+  --pannello: #141416;     /* il pannello che si apre, un passo più chiaro */
+  --chiaro: #f1efea;       /* testo e PORTFOLIO */
+  --tenue: #a7a29c;        /* testo secondario */
   --bordeaux: #510000;     /* la stella */
 
   --font: "Satoshi", "Helvetica Neue", Arial, sans-serif;
@@ -35,8 +39,8 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background: var(--carta);
-  color: var(--nero);
+  background: var(--fondo);
+  color: var(--chiaro);
   font-family: var(--font);
   font-size: var(--t-testo);
   line-height: 1.55;
@@ -50,8 +54,8 @@ button { font: inherit; color: inherit; }
 p { text-wrap: pretty; }
 
 /* Le parti del browser che di solito si dimenticano */
-::selection { background: var(--nero); color: var(--carta); }
-:focus-visible { outline: 3px solid var(--nero); outline-offset: 3px; border-radius: 3px; }
+::selection { background: var(--chiaro); color: var(--fondo); }
+:focus-visible { outline: 2px solid var(--chiaro); outline-offset: 3px; border-radius: 3px; }
 
 .solo-lettori {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
@@ -59,7 +63,7 @@ p { text-wrap: pretty; }
 }
 .salta {
   position: absolute; left: var(--margine); top: 0.5rem; z-index: 100;
-  background: var(--nero); color: var(--carta); padding: 0.75rem 1rem;
+  background: var(--chiaro); color: var(--fondo); padding: 0.75rem 1rem;
   clip-path: inset(50%);
 }
 .salta:focus { clip-path: none; }
@@ -78,5 +82,4 @@ p { text-wrap: pretty; }
   background: radial-gradient(circle at 35% 30%, #fff 0 8%, var(--c1) 40%, var(--c2) 100%);
 }
 
-/* La stella di Matilde (forma in index.html, bordo sgranato con il filtro #sgranato) */
-.stella { color: var(--bordeaux); }
+html { scrollbar-color: #3a3a3d var(--fondo); }
